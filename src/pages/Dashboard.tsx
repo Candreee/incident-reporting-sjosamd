@@ -1,8 +1,9 @@
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, FileText, Calendar, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from "@/integrations/supabase/client";
 import {
   Card,
   CardContent,
@@ -20,11 +21,6 @@ import {
 } from "@/components/ui/table";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
 
 interface IncidentReport {
   id: number;
