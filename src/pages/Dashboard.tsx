@@ -1,9 +1,8 @@
-
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, FileText, Calendar, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from '@supabase/supabase-js';
 import {
   Card,
   CardContent,
@@ -22,6 +21,11 @@ import {
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
+
 interface IncidentReport {
   id: number;
   student_names: string;
@@ -37,7 +41,6 @@ const Dashboard = () => {
   const [recentReports, setRecentReports] = useState<IncidentReport[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const supabase = createClientComponentClient();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -64,7 +67,7 @@ const Dashboard = () => {
     };
 
     fetchReports();
-  }, [supabase, toast]);
+  }, [toast]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -187,4 +190,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
