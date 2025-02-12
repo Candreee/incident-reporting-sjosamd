@@ -9,10 +9,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { IncidentFormFields } from "@/components/incident-report/IncidentFormFields";
 import { IncidentReportHeader } from "@/components/incident-report/IncidentReportHeader";
 import { incidentFormSchema, type IncidentFormData } from "@/schemas/incidentFormSchema";
+import { useAuth } from "@/contexts/AuthContext";
 
 const NewReport = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { profile } = useAuth();
 
   const form = useForm<IncidentFormData>({
     resolver: zodResolver(incidentFormSchema),
@@ -45,7 +47,7 @@ const NewReport = () => {
         title: "Success",
         description: "Incident report submitted successfully",
       });
-      navigate("/dashboard");
+      navigate(profile?.role === 'teacher' ? "/dashboard" : "/admin");
     } catch (error) {
       console.error("Error submitting form:", error);
       toast({
