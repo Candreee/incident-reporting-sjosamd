@@ -13,6 +13,7 @@ export type Database = {
         Row: {
           class: string
           created_at: string
+          created_by: string | null
           description: string
           id: number
           incident_date: string
@@ -23,6 +24,7 @@ export type Database = {
         Insert: {
           class: string
           created_at?: string
+          created_by?: string | null
           description: string
           id?: number
           incident_date: string
@@ -33,6 +35,7 @@ export type Database = {
         Update: {
           class?: string
           created_at?: string
+          created_by?: string | null
           description?: string
           id?: number
           incident_date?: string
@@ -57,6 +60,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -65,7 +89,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "teacher" | "principal"
     }
     CompositeTypes: {
       [_ in never]: never
