@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, FileText, Calendar, User } from "lucide-react";
@@ -22,16 +23,7 @@ import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import type { Database } from "@/integrations/supabase/types";
 
-interface IncidentReport {
-  id: number;
-  student_names: string;
-  class: string;
-  incident_date: string;
-  description: string;
-  incident_type: string;
-  status: string;
-  created_at: string;
-}
+type IncidentReport = Database["public"]["Tables"]["incident_reports"]["Row"];
 
 const Dashboard = () => {
   const [recentReports, setRecentReports] = useState<IncidentReport[]>([]);
