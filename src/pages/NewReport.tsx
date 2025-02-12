@@ -5,7 +5,7 @@ import { Form } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { supabase } from "@/integrations/supabase/client";
 import { IncidentFormFields } from "@/components/incident-report/IncidentFormFields";
 import { IncidentReportHeader } from "@/components/incident-report/IncidentReportHeader";
 import { incidentFormSchema, type IncidentFormData } from "@/schemas/incidentFormSchema";
@@ -13,7 +13,6 @@ import { incidentFormSchema, type IncidentFormData } from "@/schemas/incidentFor
 const NewReport = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const supabase = createClientComponentClient();
 
   const form = useForm<IncidentFormData>({
     resolver: zodResolver(incidentFormSchema),
