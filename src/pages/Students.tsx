@@ -31,6 +31,13 @@ type Student = {
   incident_count: number;
 };
 
+type SupabaseStudent = {
+  id: number;
+  name: string;
+  grade: string;
+  incident_count: { count: number }[];
+};
+
 const Students = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,7 +65,18 @@ const Students = () => {
         `);
 
       if (error) throw error;
-      setStudents(data || []);
+
+      // Transform the data to match our Student type
+      const transformedData: Student[] = (data as SupabaseStudent[]).map(
+        (student) => ({
+          id: student.id,
+          name: student.name,
+          grade: student.grade || "",
+          incident_count: student.incident_count[0]?.count || 0,
+        })
+      );
+
+      setStudents(transformedData);
     } catch (error) {
       console.error("Error fetching students:", error);
       toast({
