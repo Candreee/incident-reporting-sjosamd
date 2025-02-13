@@ -19,6 +19,7 @@ export type Database = {
           incident_date: string
           incident_type: string
           status: string
+          student_id: number | null
           student_names: string
         }
         Insert: {
@@ -30,6 +31,7 @@ export type Database = {
           incident_date: string
           incident_type: string
           status?: string
+          student_id?: number | null
           student_names: string
         }
         Update: {
@@ -41,9 +43,18 @@ export type Database = {
           incident_date?: string
           incident_type?: string
           status?: string
+          student_id?: number | null
           student_names?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "incident_reports_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       Reports: {
         Row: {
@@ -57,6 +68,27 @@ export type Database = {
         Update: {
           created_at?: string
           id?: number
+        }
+        Relationships: []
+      }
+      students: {
+        Row: {
+          created_at: string
+          grade: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          grade?: string | null
+          id?: number
+          name: string
+        }
+        Update: {
+          created_at?: string
+          grade?: string | null
+          id?: number
+          name?: string
         }
         Relationships: []
       }
