@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, FileText } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -23,6 +23,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Student = {
   id: number;
@@ -43,6 +51,13 @@ const Students = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [newStudent, setNewStudent] = useState({ name: "", grade: "" });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [newReport, setNewReport] = useState({
+    description: "",
+    incidentType: "",
+    class: "",
+  });
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { toast } = useToast();
@@ -117,6 +132,43 @@ const Students = () => {
     }
   };
 
+  const addReport = async () => {
+    if (!selectedStudent) return;
+
+    try {
+      const { error } = await supabase.from("incident_reports").insert([
+        {
+          student_id: selectedStudent.id,
+          student_names: selectedStudent.name,
+          description: newReport.description,
+          incident_type: newReport.incidentType,
+          class: newReport.class,
+          incident_date: new Date().toISOString(),
+          status: "pending",
+          created_by: profile?.id,
+        },
+      ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Incident report added successfully",
+      });
+      setIsReportDialogOpen(false);
+      setNewReport({ description: "", incidentType: "", class: "" });
+      setSelectedStudent(null);
+      fetchStudents();
+    } catch (error) {
+      console.error("Error adding report:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add incident report",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
@@ -183,6 +235,7 @@ const Students = () => {
                     <TableHead>Name</TableHead>
                     <TableHead>Grade</TableHead>
                     <TableHead>Incident Reports</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -191,6 +244,20 @@ const Students = () => {
                       <TableCell>{student.name}</TableCell>
                       <TableCell>{student.grade}</TableCell>
                       <TableCell>{student.incident_count}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedStudent(student);
+                            setIsReportDialogOpen(true);
+                          }}
+                          className="flex items-center space-x-2"
+                        >
+                          <FileText className="h-4 w-4" />
+                          <span>Add Report</span>
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -199,6 +266,61 @@ const Students = () => {
           </div>
         </div>
       </main>
+
+      <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              Add Incident Report for {selectedStudent?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="class">Class</Label>
+              <Input
+                id="class"
+                value={newReport.class}
+                onChange={(e) =>
+                  setNewReport({ ...newReport, class: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <Label htmlFor="incidentType">Type of Incident</Label>
+              <Select
+                value={newReport.incidentType}
+                onValueChange={(value) =>
+                  setNewReport({ ...newReport, incidentType: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select incident type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="behavioral">Behavioral</SelectItem>
+                  <SelectItem value="academic">Academic</SelectItem>
+                  <SelectItem value="attendance">Attendance</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={newReport.description}
+                onChange={(e) =>
+                  setNewReport({ ...newReport, description: e.target.value })
+                }
+                className="min-h-[100px]"
+              />
+            </div>
+            <Button onClick={addReport} className="w-full">
+              Submit Report
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
