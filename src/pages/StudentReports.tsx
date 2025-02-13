@@ -49,22 +49,36 @@ const StudentReports = () => {
   }, [studentId, profile, navigate]);
 
   const fetchStudentAndReports = async () => {
+    if (!studentId) return;
+    
+    // Convert studentId from string to number
+    const studentIdNumber = parseInt(studentId, 10);
+    if (isNaN(studentIdNumber)) {
+      toast({
+        title: "Error",
+        description: "Invalid student ID",
+        variant: "destructive",
+      });
+      navigate("/students");
+      return;
+    }
+
     try {
-      // Fetch student details
+      // Fetch student details with converted ID
       const { data: studentData, error: studentError } = await supabase
         .from("students")
         .select("name, grade")
-        .eq("id", studentId)
+        .eq("id", studentIdNumber)
         .single();
 
       if (studentError) throw studentError;
       setStudent(studentData);
 
-      // Fetch reports with filters
+      // Fetch reports with filters and converted ID
       let query = supabase
         .from("incident_reports")
         .select("*")
-        .eq("student_id", studentId)
+        .eq("student_id", studentIdNumber)
         .order("incident_date", { ascending: false });
 
       if (filters.date) {
