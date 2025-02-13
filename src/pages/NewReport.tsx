@@ -29,6 +29,11 @@ const NewReport = () => {
 
   const onSubmit = async (data: IncidentFormData) => {
     try {
+      // Set status to approved if user is admin or principal
+      const status = profile?.role === "admin" || profile?.role === "principal" 
+        ? "approved" 
+        : "pending";
+
       const { error } = await supabase.from("incident_reports").insert([
         {
           student_names: data.studentNames,
@@ -36,7 +41,7 @@ const NewReport = () => {
           incident_date: data.incidentDate,
           description: data.description,
           incident_type: data.incidentType,
-          status: "pending",
+          status: status,
           created_by: (await supabase.auth.getUser()).data.user?.id,
         },
       ]);

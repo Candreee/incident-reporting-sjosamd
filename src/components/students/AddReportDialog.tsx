@@ -20,6 +20,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Student } from "@/types/student";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AddReportDialogProps {
   isOpen: boolean;
@@ -42,11 +43,17 @@ export function AddReportDialog({
     class: "",
   });
   const { toast } = useToast();
+  const { profile } = useAuth();
 
   const addReport = async () => {
     if (!student || !userId) return;
 
     try {
+      // Set status to approved if user is admin or principal
+      const status = profile?.role === "admin" || profile?.role === "principal" 
+        ? "approved" 
+        : "pending";
+
       const { error } = await supabase.from("incident_reports").insert([
         {
           student_id: student.id,
@@ -55,7 +62,7 @@ export function AddReportDialog({
           incident_type: newReport.incidentType,
           class: newReport.class,
           incident_date: new Date().toISOString(),
-          status: "pending",
+          status: status,
           created_by: userId,
         },
       ]);
