@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, FileText, Calendar, User } from "lucide-react";
@@ -30,6 +29,7 @@ const Dashboard = () => {
   const [reports, setReports] = useState<IncidentReport[]>([]);
   const [filteredReports, setFilteredReports] = useState<IncidentReport[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -39,12 +39,18 @@ const Dashboard = () => {
   }, [toast]);
 
   useEffect(() => {
-    if (statusFilter === "all") {
-      setFilteredReports(reports);
-    } else {
-      setFilteredReports(reports.filter(report => report.status === statusFilter));
+    let filtered = [...reports];
+    
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(report => report.status === statusFilter);
     }
-  }, [statusFilter, reports]);
+    
+    if (typeFilter !== "all") {
+      filtered = filtered.filter(report => report.incident_type === typeFilter);
+    }
+    
+    setFilteredReports(filtered);
+  }, [statusFilter, typeFilter, reports]);
 
   const fetchReports = async () => {
     try {
@@ -141,8 +147,10 @@ const Dashboard = () => {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-medium">Recent Reports</h2>
               <ReportStatusFilter
-                value={statusFilter}
-                onChange={setStatusFilter}
+                statusValue={statusFilter}
+                onStatusChange={setStatusFilter}
+                typeValue={typeFilter}
+                onTypeChange={setTypeFilter}
               />
             </div>
             {isLoading ? (
