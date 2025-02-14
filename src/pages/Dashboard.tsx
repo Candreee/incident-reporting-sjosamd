@@ -21,41 +21,53 @@ import {
 } from "@/components/ui/table";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
+import { ReportStatusFilter } from "@/components/incident-report/ReportStatusFilter";
 import type { Database } from "@/integrations/supabase/types";
 
 type IncidentReport = Database["public"]["Tables"]["incident_reports"]["Row"];
 
 const Dashboard = () => {
-  const [recentReports, setRecentReports] = useState<IncidentReport[]>([]);
+  const [reports, setReports] = useState<IncidentReport[]>([]);
+  const [filteredReports, setFilteredReports] = useState<IncidentReport[]>([]);
+  const [statusFilter, setStatusFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchReports = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("incident_reports")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-
-        setRecentReports(data || []);
-      } catch (error) {
-        console.error("Error fetching reports:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load incident reports",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchReports();
   }, [toast]);
+
+  useEffect(() => {
+    if (statusFilter === "all") {
+      setFilteredReports(reports);
+    } else {
+      setFilteredReports(reports.filter(report => report.status === statusFilter));
+    }
+  }, [statusFilter, reports]);
+
+  const fetchReports = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("incident_reports")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      setReports(data || []);
+      setFilteredReports(data || []);
+    } catch (error) {
+      console.error("Error fetching reports:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load incident reports",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -82,7 +94,7 @@ const Dashboard = () => {
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{recentReports.length}</div>
+              <div className="text-2xl font-bold">{reports.length}</div>
               <p className="text-xs text-muted-foreground">
                 Incident reports filed
               </p>
@@ -96,7 +108,7 @@ const Dashboard = () => {
             <CardContent>
               <div className="text-2xl font-bold">
                 {
-                  recentReports.filter(
+                  reports.filter(
                     (report) =>
                       new Date(report.created_at) >
                       new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
@@ -114,8 +126,7 @@ const Dashboard = () => {
             <CardContent>
               <div className="text-2xl font-bold">
                 {
-                  recentReports.filter((report) => report.status === "pending")
-                    .length
+                  reports.filter((report) => report.status === "pending").length
                 }
               </div>
               <p className="text-xs text-muted-foreground">
@@ -127,10 +138,16 @@ const Dashboard = () => {
 
         <div className="bg-white shadow rounded-lg">
           <div className="p-6">
-            <h2 className="text-lg font-medium mb-4">Recent Reports</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-medium">Recent Reports</h2>
+              <ReportStatusFilter
+                value={statusFilter}
+                onChange={setStatusFilter}
+              />
+            </div>
             {isLoading ? (
               <p className="text-center py-4">Loading reports...</p>
-            ) : recentReports.length === 0 ? (
+            ) : filteredReports.length === 0 ? (
               <p className="text-gray-500 text-center py-8">
                 No reports yet. Click "New Report" to create one.
               </p>
@@ -146,7 +163,7 @@ const Dashboard = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentReports.map((report) => (
+                  {filteredReports.map((report) => (
                     <TableRow key={report.id}>
                       <TableCell>
                         {format(new Date(report.incident_date), "MMM d, yyyy")}

@@ -8,12 +8,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { StatsOverview } from "@/components/admin/StatsOverview";
 import { ReportsTable } from "@/components/admin/ReportsTable";
+import { ReportStatusFilter } from "@/components/incident-report/ReportStatusFilter";
 import type { Database } from "@/integrations/supabase/types";
 
 type IncidentReport = Database["public"]["Tables"]["incident_reports"]["Row"];
 
 const AdminDashboard = () => {
   const [reports, setReports] = useState<IncidentReport[]>([]);
+  const [filteredReports, setFilteredReports] = useState<IncidentReport[]>([]);
+  const [statusFilter, setStatusFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -28,6 +31,14 @@ const AdminDashboard = () => {
     fetchReports();
   }, [profile, navigate]);
 
+  useEffect(() => {
+    if (statusFilter === "all") {
+      setFilteredReports(reports);
+    } else {
+      setFilteredReports(reports.filter(report => report.status === statusFilter));
+    }
+  }, [statusFilter, reports]);
+
   const fetchReports = async () => {
     try {
       const { data, error } = await supabase
@@ -37,6 +48,7 @@ const AdminDashboard = () => {
 
       if (error) throw error;
       setReports(data || []);
+      setFilteredReports(data || []);
     } catch (error) {
       console.error("Error fetching reports:", error);
       toast({
@@ -105,14 +117,20 @@ const AdminDashboard = () => {
 
         <div className="bg-white shadow rounded-lg">
           <div className="p-6">
-            <h2 className="text-lg font-medium mb-4">Incident Reports</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-medium">Incident Reports</h2>
+              <ReportStatusFilter
+                value={statusFilter}
+                onChange={setStatusFilter}
+              />
+            </div>
             {isLoading ? (
               <p className="text-center py-4">Loading reports...</p>
-            ) : reports.length === 0 ? (
+            ) : filteredReports.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No reports found.</p>
             ) : (
               <ReportsTable
-                reports={reports}
+                reports={filteredReports}
                 onUpdateStatus={updateReportStatus}
               />
             )}
