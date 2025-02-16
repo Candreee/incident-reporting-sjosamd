@@ -19,11 +19,11 @@ const NewReport = () => {
   const form = useForm<IncidentFormData>({
     resolver: zodResolver(incidentFormSchema),
     defaultValues: {
-      studentNames: "",
+      studentId: undefined,
       class: "",
       incidentDate: new Date().toISOString().split("T")[0],
       description: "",
-      incidentType: "",
+      incidentType: undefined,
     },
   });
 
@@ -34,9 +34,19 @@ const NewReport = () => {
         ? "approved" 
         : "pending";
 
+      // Fetch student name for the record
+      const { data: studentData, error: studentError } = await supabase
+        .from("students")
+        .select("name")
+        .eq("id", data.studentId)
+        .single();
+
+      if (studentError) throw studentError;
+
       const { error } = await supabase.from("incident_reports").insert([
         {
-          student_names: data.studentNames,
+          student_id: data.studentId,
+          student_names: studentData.name,
           class: data.class,
           incident_date: data.incidentDate,
           description: data.description,

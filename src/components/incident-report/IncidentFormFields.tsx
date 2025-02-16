@@ -1,4 +1,4 @@
-
+import { useEffect, useState } from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Mic, MicOff } from "lucide-react";
 import { incidentTypes } from "@/schemas/incidentFormSchema";
 import { UseFormReturn } from "react-hook-form";
-import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import type { IncidentFormData } from "@/schemas/incidentFormSchema";
+import type { Student } from "@/types/student";
 
 interface IncidentFormFieldsProps {
   form: UseFormReturn<IncidentFormData>;
@@ -19,7 +19,31 @@ interface IncidentFormFieldsProps {
 export function IncidentFormFields({ form }: IncidentFormFieldsProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [students, setStudents] = useState<Student[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  const fetchStudents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("students")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      setStudents(data || []);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load students list",
+        variant: "destructive",
+      });
+    }
+  };
 
   const startRecording = async () => {
     try {
@@ -95,13 +119,27 @@ export function IncidentFormFields({ form }: IncidentFormFieldsProps) {
     <>
       <FormField
         control={form.control}
-        name="studentNames"
+        name="studentId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Student Name(s)</FormLabel>
-            <FormControl>
-              <Input placeholder="Enter student name(s)" {...field} />
-            </FormControl>
+            <FormLabel>Student</FormLabel>
+            <Select 
+              onValueChange={(value) => field.onChange(parseInt(value))} 
+              value={field.value?.toString()}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a student" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {students.map((student) => (
+                  <SelectItem key={student.id} value={student.id.toString()}>
+                    {student.name} - {student.grade}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}
@@ -127,7 +165,7 @@ export function IncidentFormFields({ form }: IncidentFormFieldsProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Type of Incident</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} value={field.value}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select incident type" />
