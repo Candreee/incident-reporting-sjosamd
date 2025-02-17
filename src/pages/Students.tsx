@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AddStudentDialog } from "@/components/students/AddStudentDialog";
 import { AddReportDialog } from "@/components/students/AddReportDialog";
 import { StudentList } from "@/components/students/StudentList";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { Student, SupabaseStudent } from "@/types/student";
 
 const Students = () => {
@@ -20,6 +21,7 @@ const Students = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (profile && profile.role !== "admin" && profile.role !== "principal") {
@@ -66,22 +68,24 @@ const Students = () => {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                onClick={() => navigate("/admin")}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to Dashboard
-              </Button>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-4 w-full sm:w-auto">
+              {!isMobile && (
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate("/admin")}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Dashboard
+                </Button>
+              )}
               <h1 className="text-2xl font-semibold text-gray-900">
                 Student Management
               </h1>
             </div>
             <Button
-              className="flex items-center space-x-2"
+              className="w-full sm:w-auto flex items-center space-x-2"
               onClick={() => setIsStudentDialogOpen(true)}
             >
               <Plus className="h-5 w-5" />
