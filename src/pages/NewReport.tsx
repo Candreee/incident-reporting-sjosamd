@@ -43,20 +43,40 @@ const NewReport = () => {
 
       if (studentError) throw studentError;
 
-      const { error } = await supabase.from("incident_reports").insert([
-        {
-          student_id: data.studentId,
-          student_names: studentData.name,
-          class: data.class,
-          incident_date: data.incidentDate,
-          description: data.description,
-          incident_type: data.incidentType,
-          status: status,
-          created_by: (await supabase.auth.getUser()).data.user?.id,
-        },
-      ]);
+      // Insert the report
+      const { data: insertedReport, error } = await supabase
+        .from("incident_reports")
+        .insert([
+          {
+            student_id: data.studentId,
+            student_names: studentData.name,
+            class: data.class,
+            incident_date: data.incidentDate,
+            description: data.description,
+            incident_type: data.incidentType,
+            status: status,
+            created_by: (await supabase.auth.getUser()).data.user?.id,
+          },
+        ])
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Send notification to admins and principals
+      const { error: notificationError } = await supabase.functions.invoke('notify-incident', {
+        body: {
+          reportId: insertedReport.id,
+          studentName: studentData.name,
+          incidentType: data.incidentType,
+          description: data.description,
+        },
+      });
+
+      if (notificationError) {
+        console.error("Error sending notification:", notificationError);
+        // Don't throw here, as the report was still created successfully
+      }
 
       toast({
         title: "Success",

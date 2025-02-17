@@ -5,6 +5,15 @@ export const incidentTypes = [
   "behavioral",
   "academic",
   "attendance",
+  "bullying",
+  "violence",
+  "substance_abuse",
+  "vandalism",
+  "cheating",
+  "cyberbullying",
+  "dress_code",
+  "electronic_device",
+  "disruptive_behavior",
   "other"
 ] as const;
 
