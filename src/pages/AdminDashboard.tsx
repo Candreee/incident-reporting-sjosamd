@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { StatsOverview } from "@/components/admin/StatsOverview";
 import { ReportsTable } from "@/components/admin/ReportsTable";
 import { ReportStatusFilter } from "@/components/incident-report/ReportStatusFilter";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { Database } from "@/integrations/supabase/types";
 
 type IncidentReport = Database["public"]["Tables"]["incident_reports"]["Row"];
@@ -21,6 +22,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { profile } = useAuth();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (profile && profile.role !== 'admin' && profile.role !== 'principal') {
@@ -96,23 +98,46 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h1 className="text-2xl font-semibold text-gray-900">Admin Dashboard</h1>
-            <div className="flex gap-4">
-              <Button
-                onClick={() => navigate("/students")}
-                className="flex items-center gap-2"
-              >
-                <Users className="h-4 w-4" />
-                Manage Students
-              </Button>
-              <Button
-                onClick={() => navigate("/new-report")}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                New Report
-              </Button>
+            <div className="flex gap-2 sm:gap-4 w-full sm:w-auto">
+              {isMobile ? (
+                <>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => navigate("/students")}
+                    className="flex-1 sm:flex-none"
+                  >
+                    <Users className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    onClick={() => navigate("/new-report")}
+                    className="flex-1 sm:flex-none"
+                  >
+                    <Plus className="h-5 w-5" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate("/students")}
+                    className="flex items-center gap-2"
+                  >
+                    <Users className="h-4 w-4" />
+                    Manage Students
+                  </Button>
+                  <Button
+                    onClick={() => navigate("/new-report")}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    New Report
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -123,7 +148,7 @@ const AdminDashboard = () => {
 
         <div className="bg-white shadow rounded-lg">
           <div className="p-6">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
               <h2 className="text-lg font-medium">Incident Reports</h2>
               <ReportStatusFilter
                 statusValue={statusFilter}
