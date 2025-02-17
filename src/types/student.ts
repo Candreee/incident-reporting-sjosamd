@@ -10,5 +10,6 @@ export type SupabaseStudent = {
   id: number;
   name: string;
   grade: string;
-  incident_count: { count: number }[];
+  created_at: string;
+  incident_count?: { count: number }[];
 };

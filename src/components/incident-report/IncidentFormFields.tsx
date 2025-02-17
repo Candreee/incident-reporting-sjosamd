@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,7 @@ import { UseFormReturn } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import type { IncidentFormData } from "@/schemas/incidentFormSchema";
-import type { Student } from "@/types/student";
+import type { Student, SupabaseStudent } from "@/types/student";
 
 interface IncidentFormFieldsProps {
   form: UseFormReturn<IncidentFormData>;
@@ -30,11 +31,23 @@ export function IncidentFormFields({ form }: IncidentFormFieldsProps) {
     try {
       const { data, error } = await supabase
         .from("students")
-        .select("*")
+        .select(`
+          *,
+          incident_count: incident_reports (count)
+        `)
         .order("name");
 
       if (error) throw error;
-      setStudents(data || []);
+
+      // Transform the data to match the Student type
+      const transformedStudents: Student[] = (data as SupabaseStudent[]).map(student => ({
+        id: student.id,
+        name: student.name,
+        grade: student.grade,
+        incident_count: student.incident_count?.[0]?.count || 0
+      }));
+
+      setStudents(transformedStudents);
     } catch (error) {
       console.error("Error fetching students:", error);
       toast({
