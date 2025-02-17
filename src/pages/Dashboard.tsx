@@ -22,6 +22,7 @@ import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { ReportStatusFilter } from "@/components/incident-report/ReportStatusFilter";
 import type { Database } from "@/integrations/supabase/types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type IncidentReport = Database["public"]["Tables"]["incident_reports"]["Row"];
 
@@ -33,6 +34,7 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchReports();
@@ -79,11 +81,11 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
             <Button
               onClick={() => navigate("/new-report")}
-              className="flex items-center space-x-2"
+              className="w-full sm:w-auto flex items-center space-x-2"
             >
               <Plus className="h-5 w-5" />
               <span>New Report</span>
@@ -93,7 +95,7 @@ const Dashboard = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Reports</CardTitle>
@@ -131,9 +133,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {
-                  reports.filter((report) => report.status === "pending").length
-                }
+                {reports.filter((report) => report.status === "pending").length}
               </div>
               <p className="text-xs text-muted-foreground">
                 Reports awaiting review
@@ -143,8 +143,8 @@ const Dashboard = () => {
         </div>
 
         <div className="bg-white shadow rounded-lg">
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-4">
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
               <h2 className="text-lg font-medium">Recent Reports</h2>
               <ReportStatusFilter
                 statusValue={statusFilter}
@@ -159,41 +159,83 @@ const Dashboard = () => {
               <p className="text-gray-500 text-center py-8">
                 No reports yet. Click "New Report" to create one.
               </p>
+            ) : isMobile ? (
+              <div className="space-y-4">
+                {filteredReports.map((report) => (
+                  <div
+                    key={report.id}
+                    className="border rounded-lg p-4 space-y-2"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium">{report.student_names}</p>
+                        <p className="text-sm text-gray-500">
+                          {format(new Date(report.incident_date), "MMM d, yyyy")}
+                        </p>
+                      </div>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          report.status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-green-100 text-green-800"
+                        }`}
+                      >
+                        {report.status}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm">
+                        <span className="font-medium">Class:</span>{" "}
+                        {report.class}
+                      </p>
+                      <p className="text-sm">
+                        <span className="font-medium">Type:</span>{" "}
+                        {report.incident_type}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Student(s)</TableHead>
-                    <TableHead>Class</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredReports.map((report) => (
-                    <TableRow key={report.id}>
-                      <TableCell>
-                        {format(new Date(report.incident_date), "MMM d, yyyy")}
-                      </TableCell>
-                      <TableCell>{report.student_names}</TableCell>
-                      <TableCell>{report.class}</TableCell>
-                      <TableCell>{report.incident_type}</TableCell>
-                      <TableCell>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            report.status === "pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-green-100 text-green-800"
-                          }`}
-                        >
-                          {report.status}
-                        </span>
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Student(s)</TableHead>
+                      <TableHead>Class</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredReports.map((report) => (
+                      <TableRow key={report.id}>
+                        <TableCell>
+                          {format(
+                            new Date(report.incident_date),
+                            "MMM d, yyyy"
+                          )}
+                        </TableCell>
+                        <TableCell>{report.student_names}</TableCell>
+                        <TableCell>{report.class}</TableCell>
+                        <TableCell>{report.incident_type}</TableCell>
+                        <TableCell>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              report.status === "pending"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-green-100 text-green-800"
+                            }`}
+                          >
+                            {report.status}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </div>
         </div>

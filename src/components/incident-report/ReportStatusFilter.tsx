@@ -7,6 +7,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { incidentTypes } from "@/schemas/incidentFormSchema";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ReportStatusFilterProps {
   statusValue: string;
@@ -21,10 +22,12 @@ export function ReportStatusFilter({
   typeValue,
   onTypeChange 
 }: ReportStatusFilterProps) {
+  const isMobile = useIsMobile();
+
   return (
-    <div className="flex gap-4 mb-4">
+    <div className={`flex flex-col sm:flex-row gap-4 ${isMobile ? 'w-full' : ''}`}>
       <Select value={statusValue} onValueChange={onStatusChange}>
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className={isMobile ? 'w-full' : 'w-[180px]'}>
           <SelectValue placeholder="Filter by status" />
         </SelectTrigger>
         <SelectContent>
@@ -36,14 +39,14 @@ export function ReportStatusFilter({
       </Select>
 
       <Select value={typeValue} onValueChange={onTypeChange}>
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className={isMobile ? 'w-full' : 'w-[180px]'}>
           <SelectValue placeholder="Filter by type" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Types</SelectItem>
           {incidentTypes.map((type) => (
             <SelectItem key={type} value={type}>
-              {type}
+              {type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ')}
             </SelectItem>
           ))}
         </SelectContent>
