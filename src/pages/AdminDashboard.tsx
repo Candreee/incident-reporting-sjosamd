@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Users, Plus } from "lucide-react";
@@ -94,6 +95,31 @@ const AdminDashboard = () => {
     }
   };
 
+  const deleteReport = async (reportId: number) => {
+    try {
+      const { error } = await supabase
+        .from("incident_reports")
+        .delete()
+        .eq("id", reportId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Report deleted successfully",
+      });
+
+      fetchReports();
+    } catch (error) {
+      console.error("Error deleting report:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete report",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
@@ -165,6 +191,8 @@ const AdminDashboard = () => {
               <ReportsTable
                 reports={filteredReports}
                 onUpdateStatus={updateReportStatus}
+                onDeleteReport={deleteReport}
+                currentUserId={profile?.id}
               />
             )}
           </div>

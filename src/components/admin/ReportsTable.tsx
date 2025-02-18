@@ -1,6 +1,6 @@
 
 import { format } from "date-fns";
-import { Check, X } from "lucide-react";
+import { Check, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -18,10 +18,16 @@ type IncidentReport = Database["public"]["Tables"]["incident_reports"]["Row"];
 interface ReportsTableProps {
   reports: IncidentReport[];
   onUpdateStatus: (reportId: number, status: string) => Promise<void>;
+  onDeleteReport: (reportId: number) => Promise<void>;
+  currentUserId?: string;
 }
 
-export function ReportsTable({ reports, onUpdateStatus }: ReportsTableProps) {
+export function ReportsTable({ reports, onUpdateStatus, onDeleteReport, currentUserId }: ReportsTableProps) {
   const isMobile = useIsMobile();
+
+  const canDelete = (report: IncidentReport) => {
+    return currentUserId && (report.created_by === currentUserId || currentUserId === report.created_by);
+  };
 
   if (isMobile) {
     return (
@@ -53,28 +59,30 @@ export function ReportsTable({ reports, onUpdateStatus }: ReportsTableProps) {
                 <span className="font-medium">Type:</span> {report.incident_type}
               </p>
             </div>
-            {report.status === "pending" && (
-              <div className="flex gap-2 mt-2">
+            <div className="flex gap-2 mt-2">
+              {report.status === "pending" && (
                 <Button
                   size="sm"
                   variant="outline"
                   className="flex-1 hover:bg-green-50"
-                  onClick={() => onUpdateStatus(report.id, "approved")}
+                  onClick={() => onUpdateStatus(report.id, "reviewed")}
                 >
                   <Check className="h-4 w-4 text-green-600 mr-2" />
-                  Approve
+                  Mark as Reviewed
                 </Button>
+              )}
+              {canDelete(report) && (
                 <Button
                   size="sm"
                   variant="outline"
                   className="flex-1 hover:bg-red-50"
-                  onClick={() => onUpdateStatus(report.id, "rejected")}
+                  onClick={() => onDeleteReport(report.id)}
                 >
-                  <X className="h-4 w-4 text-red-600 mr-2" />
-                  Reject
+                  <Trash2 className="h-4 w-4 text-red-600 mr-2" />
+                  Delete
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -115,26 +123,28 @@ export function ReportsTable({ reports, onUpdateStatus }: ReportsTableProps) {
                 </span>
               </TableCell>
               <TableCell>
-                {report.status === "pending" && (
-                  <div className="flex space-x-2">
+                <div className="flex space-x-2">
+                  {report.status === "pending" && (
                     <Button
                       size="sm"
                       variant="outline"
                       className="hover:bg-green-50"
-                      onClick={() => onUpdateStatus(report.id, "approved")}
+                      onClick={() => onUpdateStatus(report.id, "reviewed")}
                     >
                       <Check className="h-4 w-4 text-green-600" />
                     </Button>
+                  )}
+                  {canDelete(report) && (
                     <Button
                       size="sm"
                       variant="outline"
                       className="hover:bg-red-50"
-                      onClick={() => onUpdateStatus(report.id, "rejected")}
+                      onClick={() => onDeleteReport(report.id)}
                     >
-                      <X className="h-4 w-4 text-red-600" />
+                      <Trash2 className="h-4 w-4 text-red-600" />
                     </Button>
-                  </div>
-                )}
+                  )}
+                </div>
               </TableCell>
             </TableRow>
           ))}
