@@ -41,6 +41,8 @@ export function AddReportDialog({
     description: "",
     incidentType: "",
     class: "",
+    evidenceUrl: "",
+    evidenceType: "",
   });
   const { toast } = useToast();
   const { profile } = useAuth();
@@ -64,6 +66,8 @@ export function AddReportDialog({
           incident_date: new Date().toISOString(),
           status: status,
           created_by: userId,
+          evidence_url: newReport.evidenceUrl,
+          evidence_type: newReport.evidenceType,
         },
       ]);
 
@@ -74,7 +78,7 @@ export function AddReportDialog({
         description: "Incident report added successfully",
       });
       onOpenChange(false);
-      setNewReport({ description: "", incidentType: "", class: "" });
+      setNewReport({ description: "", incidentType: "", class: "", evidenceUrl: "", evidenceType: "" });
       onSuccess();
     } catch (error) {
       console.error("Error adding report:", error);

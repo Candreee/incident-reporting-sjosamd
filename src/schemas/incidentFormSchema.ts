@@ -27,6 +27,8 @@ export const incidentFormSchema = z.object({
   }),
   incidentDate: z.string().min(1, "Date is required"),
   description: z.string().min(1, "Description is required"),
+  evidenceUrl: z.string().optional(),
+  evidenceType: z.string().optional(),
 });
 
 export type IncidentFormData = z.infer<typeof incidentFormSchema>;

@@ -15,6 +15,8 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string
+          evidence_type: string | null
+          evidence_url: string | null
           id: number
           incident_date: string
           incident_type: string
@@ -27,6 +29,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description: string
+          evidence_type?: string | null
+          evidence_url?: string | null
           id?: number
           incident_date: string
           incident_type: string
@@ -39,6 +43,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string
+          evidence_type?: string | null
+          evidence_url?: string | null
           id?: number
           incident_date?: string
           incident_type?: string
