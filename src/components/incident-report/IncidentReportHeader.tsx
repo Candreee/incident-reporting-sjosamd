@@ -2,9 +2,20 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function IncidentReportHeader() {
   const navigate = useNavigate();
+  const { profile } = useAuth();
+  
+  const handleBack = () => {
+    // Navigate to admin dashboard if user is admin or principal, otherwise to regular dashboard
+    const targetRoute = profile?.role === 'admin' || profile?.role === 'principal' 
+      ? "/admin" 
+      : "/dashboard";
+    
+    navigate(targetRoute);
+  };
   
   return (
     <header className="bg-white shadow">
@@ -12,7 +23,7 @@ export function IncidentReportHeader() {
         <div className="flex items-center">
           <Button
             variant="ghost"
-            onClick={() => navigate("/dashboard")}
+            onClick={handleBack}
             className="mr-4"
           >
             <ArrowLeft className="h-5 w-5" />
