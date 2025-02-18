@@ -70,7 +70,16 @@ const Students = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-4 w-full sm:w-auto">
-              {!isMobile && (
+              {isMobile ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/admin")}
+                  className="h-9 w-9"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              ) : (
                 <Button
                   variant="ghost"
                   onClick={() => navigate("/admin")}
