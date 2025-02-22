@@ -23,6 +23,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { PrintableReport } from "@/components/incident-report/PrintableReport";
+import { ReportActions } from "@/components/incident-report/ReportActions";
 import type { Database } from "@/integrations/supabase/types";
 
 type IncidentReport = Database["public"]["Tables"]["incident_reports"]["Row"];
@@ -30,6 +32,7 @@ type IncidentReport = Database["public"]["Tables"]["incident_reports"]["Row"];
 const StudentReports = () => {
   const { studentId } = useParams();
   const [reports, setReports] = useState<IncidentReport[]>([]);
+  const [selectedReport, setSelectedReport] = useState<IncidentReport | null>(null);
   const [student, setStudent] = useState<{ name: string; grade: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -114,27 +117,38 @@ const StudentReports = () => {
   }, [filters]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-gray-50 print:bg-white print:min-h-0">
+      <header className="bg-white shadow print:hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/students")}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Students
-            </Button>
-            <h1 className="text-2xl font-semibold text-gray-900">
-              Reports for {student?.name} - Grade {student?.grade}
-            </h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/students")}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Students
+              </Button>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                Reports for {student?.name} - Grade {student?.grade}
+              </h1>
+            </div>
+            {selectedReport && (
+              <ReportActions report={selectedReport} />
+            )}
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white shadow rounded-lg">
+        {selectedReport ? (
+          <div className="print:block hidden">
+            <PrintableReport report={selectedReport} />
+          </div>
+        ) : null}
+
+        <div className="bg-white shadow rounded-lg print:hidden">
           <div className="p-6">
             <div className="flex gap-4 mb-6">
               <div className="flex-1">
@@ -179,6 +193,7 @@ const StudentReports = () => {
                     <TableHead>Class</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -200,6 +215,15 @@ const StudentReports = () => {
                         >
                           {report.status}
                         </span>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedReport(report)}
+                        >
+                          View & Print
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
