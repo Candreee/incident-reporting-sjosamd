@@ -24,18 +24,18 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Fetch admin and principal emails
-    const { data: adminUsers, error: adminError } = await supabaseClient
+    // Fetch only principal emails (modified from previous version)
+    const { data: principalUsers, error: principalError } = await supabaseClient
       .from('user_profiles')
       .select('email')
-      .in('role', ['admin', 'principal']);
+      .eq('role', 'principal');
 
-    if (adminError) throw adminError;
+    if (principalError) throw principalError;
 
-    const adminEmails = adminUsers.map(user => user.email);
+    const principalEmails = principalUsers.map(user => user.email);
     
-    if (adminEmails.length === 0) {
-      throw new Error('No admin or principal emails found');
+    if (principalEmails.length === 0) {
+      throw new Error('No principal emails found');
     }
 
     const appUrl = Deno.env.get('APP_URL') ?? 'http://localhost:5173';
@@ -43,7 +43,7 @@ serve(async (req) => {
 
     const { data: emailResponse, error: emailError } = await resend.emails.send({
       from: 'School Incident Reports <onboarding@resend.dev>',
-      to: adminEmails,
+      to: principalEmails,
       subject: `New Incident Report - ${studentName}`,
       html: `
         <h1>New Incident Report</h1>
