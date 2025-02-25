@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ReportsTable } from "@/components/admin/ReportsTable";
 import { ReportStatusFilter } from "@/components/incident-report/ReportStatusFilter";
 import type { Database } from "@/integrations/supabase/types";
@@ -26,7 +26,7 @@ export const ReportsContainer = ({
   const [filteredReports, setFilteredReports] = useState<IncidentReport[]>(reports);
 
   // Apply filters when reports, statusFilter, or typeFilter change
-  useState(() => {
+  useEffect(() => {
     let filtered = [...reports];
     
     if (statusFilter !== "all") {
@@ -68,3 +68,4 @@ export const ReportsContainer = ({
     </div>
   );
 };
+
