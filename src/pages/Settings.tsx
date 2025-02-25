@@ -4,14 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Settings as SettingsIcon, LogOut, User } from "lucide-react";
@@ -19,8 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const Settings = () => {
   const { user, profile, signOut } = useAuth();
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"admin" | "teacher" | "principal">("teacher");
+  const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -30,11 +21,9 @@ const Settings = () => {
       navigate("/login");
       return;
     }
-    setEmail(profile.email);
-    setRole(profile.role);
   }, [user, profile, navigate]);
 
-  const handleUpdateProfile = async () => {
+  const handleUpdateName = async () => {
     if (!user) return;
 
     setIsLoading(true);
@@ -42,8 +31,7 @@ const Settings = () => {
       const { error } = await supabase
         .from("user_profiles")
         .update({
-          email,
-          role: profile?.role === "admin" ? role : profile?.role, // Only allow role update if user is admin
+          name: name,
         })
         .eq("id", user.id);
 
@@ -51,13 +39,13 @@ const Settings = () => {
 
       toast({
         title: "Success",
-        description: "Profile updated successfully",
+        description: "Name updated successfully",
       });
     } catch (error) {
-      console.error("Error updating profile:", error);
+      console.error("Error updating name:", error);
       toast({
         title: "Error",
-        description: "Failed to update profile",
+        description: "Failed to update name",
         variant: "destructive",
       });
     } finally {
@@ -104,39 +92,27 @@ const Settings = () => {
           </div>
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-gray-500">Email</p>
+              <p className="text-base text-gray-900">{profile?.email}</p>
             </div>
 
-            {profile?.role === "admin" && (
-              <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Select value={role} onValueChange={(value: "admin" | "teacher" | "principal") => setRole(value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="teacher">Teacher</SelectItem>
-                    <SelectItem value="principal">Principal</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-500">Name</p>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Add your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+                <Button
+                  onClick={handleUpdateName}
+                  disabled={isLoading || !name}
+                >
+                  {isLoading ? "Updating..." : "Update"}
+                </Button>
               </div>
-            )}
-
-            <Button
-              className="w-full"
-              onClick={handleUpdateProfile}
-              disabled={isLoading}
-            >
-              {isLoading ? "Updating..." : "Update Profile"}
-            </Button>
+            </div>
 
             <div className="pt-4 border-t">
               <Button
