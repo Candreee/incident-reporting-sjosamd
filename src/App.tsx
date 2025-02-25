@@ -13,6 +13,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Students from "./pages/Students";
 import NewReport from "./pages/NewReport";
 import NotFound from "./pages/NotFound";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/students" element={<Students />} />
             <Route path="/new-report" element={<NewReport />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
