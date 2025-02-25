@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Users, Plus } from "lucide-react";
+import { Users, Plus, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -31,6 +31,14 @@ export const AdminHeader = () => {
                 >
                   <Plus className="h-5 w-5" />
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/settings")}
+                  className="flex-1 sm:flex-none"
+                >
+                  <Settings className="h-5 w-5" />
+                </Button>
               </>
             ) : (
               <>
@@ -48,6 +56,14 @@ export const AdminHeader = () => {
                 >
                   <Plus className="h-4 w-4" />
                   New Report
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate("/settings")}
+                  className="flex items-center gap-2"
+                >
+                  <Settings className="h-4 w-4" />
+                  Settings
                 </Button>
               </>
             )}
