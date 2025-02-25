@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Settings as SettingsIcon, LogOut } from "lucide-react";
+import { Settings as SettingsIcon, LogOut, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const Settings = () => {
@@ -86,58 +86,69 @@ const Settings = () => {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <SettingsIcon className="h-6 w-6 text-gray-600 mr-2" />
-              <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
-            </div>
-            <Button
-              variant="outline"
-              onClick={handleSignOut}
-              className="flex items-center gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Sign Out
-            </Button>
+          <div className="flex items-center">
+            <SettingsIcon className="h-6 w-6 text-gray-600 mr-2" />
+            <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Card className="max-w-2xl mx-auto p-6 space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+          <div className="flex items-center gap-3 pb-6 border-b">
+            <User className="h-12 w-12 text-gray-400 bg-gray-100 p-2 rounded-full" />
+            <div>
+              <h2 className="font-semibold text-xl text-gray-900">User Profile</h2>
+              <p className="text-sm text-gray-500">Manage your account settings</p>
+            </div>
           </div>
 
-          {profile?.role === "admin" && (
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select value={role} onValueChange={(value: "admin" | "teacher" | "principal") => setRole(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="teacher">Teacher</SelectItem>
-                  <SelectItem value="principal">Principal</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
-          )}
 
-          <Button
-            className="w-full"
-            onClick={handleUpdateProfile}
-            disabled={isLoading}
-          >
-            {isLoading ? "Updating..." : "Update Profile"}
-          </Button>
+            {profile?.role === "admin" && (
+              <div className="space-y-2">
+                <Label htmlFor="role">Role</Label>
+                <Select value={role} onValueChange={(value: "admin" | "teacher" | "principal") => setRole(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="teacher">Teacher</SelectItem>
+                    <SelectItem value="principal">Principal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <Button
+              className="w-full"
+              onClick={handleUpdateProfile}
+              disabled={isLoading}
+            >
+              {isLoading ? "Updating..." : "Update Profile"}
+            </Button>
+
+            <div className="pt-4 border-t">
+              <Button
+                variant="outline"
+                className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={handleSignOut}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
+          </div>
         </Card>
       </main>
     </div>
@@ -145,3 +156,4 @@ const Settings = () => {
 };
 
 export default Settings;
+
