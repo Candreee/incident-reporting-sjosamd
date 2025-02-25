@@ -21,6 +21,8 @@ const Settings = () => {
       navigate("/login");
       return;
     }
+    // Initialize name state with current profile name
+    setName(profile.name || "");
   }, [user, profile, navigate]);
 
   const handleUpdateName = async () => {
