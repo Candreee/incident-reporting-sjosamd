@@ -11,7 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 const Settings = () => {
   const { user, profile, signOut } = useAuth();
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -21,11 +22,12 @@ const Settings = () => {
       navigate("/login");
       return;
     }
-    // Initialize name state with current profile name
-    setName(profile.name || "");
+    // Initialize name states with current profile names
+    setFirstName(profile.first_name || "");
+    setLastName(profile.last_name || "");
   }, [user, profile, navigate]);
 
-  const handleUpdateName = async () => {
+  const handleUpdateNames = async () => {
     if (!user) return;
 
     setIsLoading(true);
@@ -33,7 +35,8 @@ const Settings = () => {
       const { error } = await supabase
         .from("user_profiles")
         .update({
-          name: name,
+          first_name: firstName,
+          last_name: lastName,
         })
         .eq("id", user.id);
 
@@ -100,21 +103,34 @@ const Settings = () => {
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-500">Name</p>
+              <p className="text-sm font-medium text-gray-500">First Name</p>
               <div className="flex gap-2">
                 <Input
-                  placeholder="Add your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Add your first name"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
                 />
-                <Button
-                  onClick={handleUpdateName}
-                  disabled={isLoading || !name}
-                >
-                  {isLoading ? "Updating..." : "Update"}
-                </Button>
               </div>
             </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-500">Last Name</p>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Add your last name"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <Button
+              onClick={handleUpdateNames}
+              disabled={isLoading || (!firstName && !lastName)}
+              className="w-full"
+            >
+              {isLoading ? "Updating..." : "Update Names"}
+            </Button>
 
             <div className="pt-4 border-t">
               <Button

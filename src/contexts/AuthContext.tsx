@@ -8,7 +8,8 @@ type UserProfile = {
   id: string;
   email: string;
   role: 'admin' | 'teacher' | 'principal';
-  name?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
 };
 
 type AuthContextType = {
@@ -130,4 +131,3 @@ export function useAuth() {
   }
   return context;
 }
-

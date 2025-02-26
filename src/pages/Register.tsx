@@ -27,6 +27,8 @@ import { supabase } from "@/integrations/supabase/client";
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   role: z.enum(["teacher", "admin", "principal"]),
 });
 
@@ -42,6 +44,8 @@ const Register = () => {
     defaultValues: {
       email: "",
       password: "",
+      firstName: "",
+      lastName: "",
       role: "teacher",
     },
   });
@@ -58,7 +62,7 @@ const Register = () => {
       if (signUpError) throw signUpError;
 
       if (authData.user) {
-        // Create the user profile with the selected role
+        // Create the user profile with the selected role and names
         const { error: profileError } = await supabase
           .from("user_profiles")
           .insert([
@@ -66,6 +70,8 @@ const Register = () => {
               id: authData.user.id,
               email: data.email,
               role: data.role,
+              first_name: data.firstName,
+              last_name: data.lastName,
             },
           ]);
 
@@ -101,6 +107,34 @@ const Register = () => {
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="email"
