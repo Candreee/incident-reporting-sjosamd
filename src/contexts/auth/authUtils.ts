@@ -45,6 +45,7 @@ export async function signInWithEmailPassword(email: string, password: string) {
     }
 
     console.log("Sign-in successful for user:", data.user?.id);
+    console.log("User metadata:", data.user?.user_metadata);
     return data;
   } catch (error) {
     console.error("Sign-in error:", error);
@@ -89,6 +90,7 @@ export async function createUserAccount(
   }
 
   console.log("Auth user created successfully:", data.user.id);
+  console.log("User metadata:", data.user.user_metadata);
 
   // Then create the profile in the user_profiles table
   console.log("Creating user profile with data:", {

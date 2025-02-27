@@ -31,6 +31,22 @@ const AdminDashboard = () => {
         return;
       }
       
+      // If user exists but no profile yet, fetch reports anyway based on user role from metadata
+      if (user && !profile) {
+        const role = user.user_metadata?.role;
+        console.log("AdminDashboard: No profile but user role from metadata:", role);
+        
+        if (role !== 'admin' && role !== 'principal') {
+          console.log("AdminDashboard: User not authorized based on metadata, redirecting to dashboard");
+          navigate('/dashboard');
+          return;
+        }
+        
+        // Authorized by metadata, fetch reports
+        fetchReports();
+        return;
+      }
+      
       // If profile is loaded and user is not admin, redirect to appropriate dashboard
       if (profile) {
         console.log("AdminDashboard: User profile loaded -", profile);
@@ -133,15 +149,9 @@ const AdminDashboard = () => {
     return null;
   }
 
-  // If profile is not loaded yet, show loading
-  if (!profile) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg">Loading user profile...</p>
-      </div>
-    );
-  }
-
+  // If user exists but no profile yet, show admin dashboard anyway based on metadata
+  const currentUserId = profile ? profile.id : user.id;
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminHeader />
@@ -152,7 +162,7 @@ const AdminDashboard = () => {
           onUpdateStatus={updateReportStatus}
           onDeleteReport={deleteReport}
           isLoading={isLoading}
-          currentUserId={profile?.id}
+          currentUserId={currentUserId}
         />
       </main>
     </div>

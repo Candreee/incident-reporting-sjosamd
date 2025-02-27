@@ -35,11 +35,27 @@ const Dashboard = () => {
         return;
       }
 
+      // Check user role from metadata if profile not loaded yet
+      if (user && !profile) {
+        const role = user.user_metadata?.role;
+        console.log("Dashboard: No profile but user role from metadata:", role);
+        
+        if (role === 'admin' || role === 'principal') {
+          console.log("Dashboard: User is admin (from metadata), redirecting to admin dashboard");
+          navigate("/admin");
+          return;
+        }
+        
+        // Not admin, fetch reports
+        fetchReports();
+        return;
+      }
+
       // If profile is loaded, check role and fetch data
       if (profile) {
         console.log("Dashboard: User profile loaded -", profile);
         // Check if user is admin, redirect if needed
-        if (profile.role === 'admin') {
+        if (profile.role === 'admin' || profile.role === 'principal') {
           console.log("Dashboard: User is admin, redirecting to admin dashboard");
           navigate("/admin");
           return;
@@ -102,15 +118,6 @@ const Dashboard = () => {
   // If not authenticated, redirect to login (handled in useEffect)
   if (!user) {
     return null;
-  }
-
-  // If profile is not loaded yet, show loading
-  if (!profile) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg">Loading user profile...</p>
-      </div>
-    );
   }
 
   return (

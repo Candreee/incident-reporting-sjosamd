@@ -49,7 +49,7 @@ const Login = () => {
     if (user && profile) {
       console.log("Login: User and profile detected, redirecting based on role:", profile.role);
       // Redirect based on role
-      if (profile.role === 'admin') {
+      if (profile.role === 'admin' || profile.role === 'principal') {
         navigate('/admin', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });
@@ -93,29 +93,23 @@ const Login = () => {
     setIsLoading(true);
     try {
       const authUser = await signIn(data.email, data.password);
-      console.log("Sign-in successful");
-      
-      // Set a short timeout to allow profile to be fetched before redirecting
-      // This prevents the "signing in..." state from being stuck
-      setTimeout(() => {
-        if (!profile) {
-          console.log("Profile not available after timeout, redirecting anyway");
-          
-          // Use the authUser object to determine role
-          const role = authUser.user_metadata?.role;
-          if (role === 'admin') {
-            navigate('/admin', { replace: true });
-          } else {
-            navigate('/dashboard', { replace: true });
-          }
-        }
-        // If profile is available, the useEffect will handle navigation
-      }, 500);
+      console.log("Sign-in successful, user:", authUser?.id);
       
       toast({
         title: "Success",
         description: "You have been signed in successfully",
       });
+
+      // Get the user role from metadata
+      const role = authUser?.user_metadata?.role;
+      console.log("User role from metadata:", role);
+
+      // Immediate redirect based on auth data to avoid waiting for profile
+      if (role === 'admin' || role === 'principal') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     } catch (error) {
       console.error("Login error:", error);
       toast({

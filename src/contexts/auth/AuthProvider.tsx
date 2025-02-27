@@ -10,11 +10,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshProfile = async (userId: string) => {
     try {
+      console.log("Refreshing profile for user:", userId);
       const fetchedProfile = await fetchUserProfile(userId);
       if (fetchedProfile) {
+        console.log("Profile refreshed successfully:", fetchedProfile);
         setProfile(fetchedProfile);
         return true;
       }
+      console.log("No profile found during refresh for user:", userId);
       return false;
     } catch (error) {
       console.error("Error refreshing profile:", error);
@@ -27,20 +30,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       
       // Step 1: Authenticate with Supabase
-      const { user: authUser } = await signInWithEmailPassword(email, password);
+      console.log("Starting authentication for:", email);
+      const { data, error } = await signInWithEmailPassword(email, password);
       
-      if (!authUser) {
-        throw new Error("Authentication failed");
+      if (error || !data.user) {
+        console.error("Authentication failed:", error);
+        throw error || new Error("Authentication failed");
       }
       
+      const authUser = data.user;
+      console.log("Authentication successful for user:", authUser.id);
+      console.log("User metadata:", authUser.user_metadata);
+      
+      // Set user immediately after successful auth
       setUser(authUser);
       
-      // Step 2: Fetch user profile
-      const profileSuccess = await refreshProfile(authUser.id);
-      
-      if (!profileSuccess) {
-        console.warn("Could not fetch user profile, will proceed with authentication only");
-      }
+      // Step 2: Fetch user profile (don't wait for it to complete)
+      refreshProfile(authUser.id).then(success => {
+        if (!success) {
+          console.warn("Could not fetch user profile, but authentication was successful");
+        }
+      });
       
       return authUser;
     } catch (error) {
