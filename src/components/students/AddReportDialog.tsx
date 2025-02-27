@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +40,7 @@ export function AddReportDialog({
   const [newReport, setNewReport] = useState({
     description: "",
     incidentType: "",
-    class: "",
+    incidentTime: new Date().toTimeString().slice(0, 5), // Default to current time
     evidenceUrl: "",
     evidenceType: "",
   });
@@ -55,14 +56,18 @@ export function AddReportDialog({
         ? "approved" 
         : "pending";
 
+      // Get today's date and combine with the time
+      const today = new Date().toISOString().split('T')[0];
+      const combinedDateTime = `${today}T${newReport.incidentTime}:00`;
+
       const { error } = await supabase.from("incident_reports").insert([
         {
           student_id: student.id,
           student_names: student.name,
           description: newReport.description,
           incident_type: newReport.incidentType,
-          class: newReport.class,
-          incident_date: new Date().toISOString(),
+          class: "", // Keeping empty but not removing from database schema
+          incident_date: combinedDateTime,
           status: status,
           created_by: userId,
           evidence_url: newReport.evidenceUrl,
@@ -77,7 +82,13 @@ export function AddReportDialog({
         description: "Incident report added successfully",
       });
       onOpenChange(false);
-      setNewReport({ description: "", incidentType: "", class: "", evidenceUrl: "", evidenceType: "" });
+      setNewReport({ 
+        description: "", 
+        incidentType: "", 
+        incidentTime: new Date().toTimeString().slice(0, 5),
+        evidenceUrl: "", 
+        evidenceType: "" 
+      });
       onSuccess();
     } catch (error) {
       console.error("Error adding report:", error);
@@ -97,12 +108,13 @@ export function AddReportDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="class">Class</Label>
+            <Label htmlFor="incidentTime">Time of Incident</Label>
             <Input
-              id="class"
-              value={newReport.class}
+              id="incidentTime"
+              type="time"
+              value={newReport.incidentTime}
               onChange={(e) =>
-                setNewReport({ ...newReport, class: e.target.value })
+                setNewReport({ ...newReport, incidentTime: e.target.value })
               }
             />
           </div>

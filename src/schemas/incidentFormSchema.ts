@@ -21,11 +21,11 @@ export const incidentFormSchema = z.object({
   studentId: z.number({
     required_error: "Please select a student",
   }),
-  class: z.string().min(1, "Class is required"),
   incidentType: z.enum(incidentTypes, {
     required_error: "Please select an incident type",
   }),
   incidentDate: z.string().min(1, "Date is required"),
+  incidentTime: z.string().min(1, "Time is required"),
   description: z.string().min(1, "Description is required"),
   evidenceUrl: z.string().optional(),
   evidenceType: z.string().optional(),

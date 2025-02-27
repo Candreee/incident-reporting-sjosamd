@@ -15,20 +15,6 @@ export function BasicFields({ form }: BasicFieldsProps) {
     <>
       <FormField
         control={form.control}
-        name="class"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Class</FormLabel>
-            <FormControl>
-              <Input placeholder="Enter class" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
         name="incidentType"
         render={({ field }) => (
           <FormItem>
@@ -60,6 +46,20 @@ export function BasicFields({ form }: BasicFieldsProps) {
             <FormLabel>Date of Incident</FormLabel>
             <FormControl>
               <Input type="date" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="incidentTime"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Time of Incident</FormLabel>
+            <FormControl>
+              <Input type="time" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

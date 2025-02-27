@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
@@ -19,8 +20,8 @@ const NewReport = () => {
     resolver: zodResolver(incidentFormSchema),
     defaultValues: {
       studentId: undefined,
-      class: "",
       incidentDate: new Date().toISOString().split("T")[0],
+      incidentTime: new Date().toTimeString().slice(0, 5), // Default to current time (HH:MM format)
       description: "",
       incidentType: undefined,
     },
@@ -47,6 +48,9 @@ const NewReport = () => {
         ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim()
         : 'Unknown Teacher';
 
+      // Combine date and time for the incident_date field in the database
+      const combinedDateTime = `${data.incidentDate}T${data.incidentTime}:00`;
+
       // Insert the report
       const { data: insertedReport, error } = await supabase
         .from("incident_reports")
@@ -54,13 +58,13 @@ const NewReport = () => {
           {
             student_id: data.studentId,
             student_names: studentData.name,
-            class: data.class,
-            incident_date: data.incidentDate,
+            class: "", // Keeping empty but not removing since it's in the database schema
+            incident_date: combinedDateTime,
             description: data.description,
             incident_type: data.incidentType,
             status: status,
             created_by: (await supabase.auth.getUser()).data.user?.id,
-            reporter_name: reporterName, // Add reporter's name to the report
+            reporter_name: reporterName,
           },
         ])
         .select()
@@ -75,7 +79,7 @@ const NewReport = () => {
           studentName: studentData.name,
           incidentType: data.incidentType,
           description: data.description,
-          reporterName: reporterName, // Include reporter's name in notification
+          reporterName: reporterName,
         },
       });
 
