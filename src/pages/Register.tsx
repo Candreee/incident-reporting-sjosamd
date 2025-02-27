@@ -4,13 +4,25 @@ import { RegisterForm } from "@/components/auth/RegisterForm";
 import { EmailConfirmation } from "@/components/auth/EmailConfirmation";
 import { RegisterLayout } from "@/components/auth/RegisterLayout";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 const Register = () => {
   const [emailSent, setEmailSent] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleRegisterSuccess = (email: string, password: string) => {
-    // Instead of showing email confirmation, redirect to login with credentials
+    // Show a toast with registration success message
+    toast({
+      title: "Registration Successful",
+      description: `Account created for ${email}. You'll be redirected to login.`,
+      duration: 5000,
+    });
+    
+    // Log for debugging
+    console.log("Registration successful, redirecting to login with credentials");
+    
+    // Redirect to login with credentials for auto-login
     navigate("/login", { 
       state: { 
         autoLogin: { 

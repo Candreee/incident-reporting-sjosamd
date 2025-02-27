@@ -156,6 +156,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Auth user created successfully:", data.user.id);
 
       // Then create the profile in the user_profiles table
+      console.log("Creating user profile with data:", {
+        id: data.user.id,
+        email,
+        role,
+        first_name: firstName || null,
+        last_name: lastName || null
+      });
+      
       const { error: profileError } = await supabase
         .from('user_profiles')
         .insert({
@@ -182,6 +190,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       console.log("User profile created successfully");
+      
+      // Verify the profile was created by attempting to retrieve it
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+        
+      if (verifyError) {
+        console.error('Error verifying profile creation:', verifyError);
+      } else {
+        console.log('Profile verification successful:', verifyData);
+      }
+      
       return;
     } catch (error) {
       console.error('Registration error:', error);

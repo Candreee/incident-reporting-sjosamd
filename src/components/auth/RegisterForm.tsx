@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -64,6 +65,8 @@ export function RegisterForm({
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     try {
+      console.log("Starting registration process for:", data.email);
+      
       await signUp(
         data.email,
         data.password,
@@ -72,9 +75,11 @@ export function RegisterForm({
         data.lastName
       );
       
+      console.log("Registration successful for:", data.email);
+      
       toast({
         title: "Account created",
-        description: "Your account has been successfully created!",
+        description: `Your account has been created with email: ${data.email} and role: ${data.role}`,
       });
       
       // Pass the credentials to the success handler for auto-login
