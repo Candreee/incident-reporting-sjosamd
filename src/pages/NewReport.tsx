@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
@@ -9,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { IncidentFormFields } from "@/components/incident-report/IncidentFormFields";
 import { IncidentReportHeader } from "@/components/incident-report/IncidentReportHeader";
 import { incidentFormSchema, type IncidentFormData } from "@/schemas/incidentFormSchema";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 
 const NewReport = () => {
   const navigate = useNavigate();

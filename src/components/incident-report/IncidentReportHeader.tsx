@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { SchoolLogo } from "@/components/ui/school-logo";
 
 export function IncidentReportHeader() {
