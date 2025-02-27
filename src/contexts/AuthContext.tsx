@@ -99,8 +99,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("Starting signup process for:", email);
       
-      // Step 1: Create the auth user with Supabase Auth
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      // First, create the user in Auth
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -118,36 +118,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw signUpError;
       }
 
-      if (!authData.user) {
+      if (!data.user) {
         console.error('No user data returned from signup');
         throw new Error('Failed to create user account');
       }
 
-      console.log("Auth user created successfully:", authData.user.id);
+      console.log("Auth user created successfully:", data.user.id);
 
-      // Step 2: Create the user profile in the user_profiles table
+      // Then create the profile in the user_profiles table
       const { error: profileError } = await supabase
         .from('user_profiles')
-        .insert([
-          {
-            id: authData.user.id,
-            email,
-            role,
-            first_name: firstName,
-            last_name: lastName,
-          },
-        ]);
+        .insert({
+          id: data.user.id,
+          email,
+          role,
+          first_name: firstName || null,
+          last_name: lastName || null,
+        });
 
       if (profileError) {
         console.error('Profile creation error:', profileError);
-        // If profile creation fails, we should clean up the auth user
-        await supabase.auth.admin.deleteUser(authData.user.id);
         throw new Error(`Failed to create user profile: ${profileError.message}`);
       }
 
       console.log("User profile created successfully");
-      
-      // Success - return without automatic navigation
       return;
     } catch (error) {
       console.error('Registration error:', error);
@@ -175,4 +169,3 @@ export function useAuth() {
   }
   return context;
 }
-

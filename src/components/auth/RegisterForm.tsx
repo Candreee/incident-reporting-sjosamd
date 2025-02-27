@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -25,8 +24,8 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 
 const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
+  email: z.string().email("Valid email is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   role: z.enum(["teacher", "admin", "principal"]),
@@ -40,7 +39,6 @@ interface RegisterFormProps {
 
 export const RegisterForm = ({ onRegisterSuccess }: RegisterFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { signUp } = useAuth();
 
@@ -58,7 +56,6 @@ export const RegisterForm = ({ onRegisterSuccess }: RegisterFormProps) => {
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     try {
-      // Use the signUp method from AuthContext which will handle both auth and profile creation
       await signUp(
         data.email, 
         data.password, 
@@ -73,10 +70,10 @@ export const RegisterForm = ({ onRegisterSuccess }: RegisterFormProps) => {
         description: "Please check your email to confirm your account",
       });
     } catch (error) {
-      console.error("Registration error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to register user";
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to register user",
+        title: "Registration Failed",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -94,7 +91,7 @@ export const RegisterForm = ({ onRegisterSuccess }: RegisterFormProps) => {
             <FormItem>
               <FormLabel>First Name</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input placeholder="Enter your first name" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -108,7 +105,7 @@ export const RegisterForm = ({ onRegisterSuccess }: RegisterFormProps) => {
             <FormItem>
               <FormLabel>Last Name</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input placeholder="Enter your last name" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -122,7 +119,7 @@ export const RegisterForm = ({ onRegisterSuccess }: RegisterFormProps) => {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input {...field} type="email" />
+                <Input type="email" placeholder="your.email@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -136,7 +133,7 @@ export const RegisterForm = ({ onRegisterSuccess }: RegisterFormProps) => {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input {...field} type="password" />
+                <Input type="password" placeholder="••••••••" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

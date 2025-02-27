@@ -1,105 +1,139 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
 import { SchoolLogo } from "@/components/ui/school-logo";
+import { useAuth } from "@/contexts/AuthContext";
+
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1, "Password is required"),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn } = useAuth();
+  const { signIn, user, profile } = useAuth();
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const form = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user && profile) {
+      // Redirect based on role
+      if (profile.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
+    }
+  }, [user, profile, navigate]);
+
+  const onSubmit = async (data: LoginFormData) => {
+    setIsLoading(true);
     try {
-      await signIn(email, password);
-      toast({
-        title: "Success",
-        description: "Welcome back",
-      });
+      await signIn(data.email, data.password);
+      
+      // The navigate will happen in the signIn function or the useEffect above
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Invalid credentials",
+        description: error instanceof Error ? error.message : "Failed to sign in",
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-pink-50 to-pink-100">
-      <Card className="w-full max-w-md p-6 space-y-6">
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/")}
-            className="hover:bg-pink-100"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+    <div className="min-h-screen bg-gradient-to-b from-pink-50 to-pink-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md mx-auto p-6 space-y-6">
+        <div className="text-center">
+          <div className="flex justify-center py-4">
+            <SchoolLogo size="lg" />
+          </div>
           <h1 className="text-2xl font-semibold">Sign In</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Enter your credentials to access your account
+          </p>
         </div>
 
-        <div className="flex justify-center py-4">
-          <SchoolLogo size="lg" />
-        </div>
-
-        <form onSubmit={handleSignIn} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="signin-email">Email</Label>
-            <Input
-              id="signin-email"
-              type="email"
-              placeholder="name@school.edu"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="signin-password">Password</Label>
-            <Input
-              id="signin-password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <Button
-            type="submit"
-            className="w-full bg-pink-600 hover:bg-pink-700"
-            disabled={loading}
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </Button>
-        </form>
+            <Button
+              type="submit"
+              className="w-full bg-pink-600 hover:bg-pink-700"
+              disabled={isLoading}
+            >
+              {isLoading ? "Signing in..." : "Sign In"}
+            </Button>
+          </form>
+        </Form>
 
-        <div className="text-center space-y-2 pt-4 border-t border-gray-200">
-          <p className="text-sm text-gray-600">Don't have an account?</p>
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => navigate("/register")}
-          >
-            Create Account
-          </Button>
+        <div className="text-center">
+          <p className="text-sm text-gray-500">
+            Don't have an account?{" "}
+            <Button
+              variant="link"
+              className="p-0 text-pink-600"
+              onClick={() => navigate("/register")}
+            >
+              Register
+            </Button>
+          </p>
         </div>
       </Card>
     </div>
