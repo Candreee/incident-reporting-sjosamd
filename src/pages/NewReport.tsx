@@ -43,6 +43,11 @@ const NewReport = () => {
 
       if (studentError) throw studentError;
 
+      // Construct reporter's full name
+      const reporterName = profile 
+        ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim()
+        : 'Unknown Teacher';
+
       // Insert the report
       const { data: insertedReport, error } = await supabase
         .from("incident_reports")
@@ -56,6 +61,7 @@ const NewReport = () => {
             incident_type: data.incidentType,
             status: status,
             created_by: (await supabase.auth.getUser()).data.user?.id,
+            reporter_name: reporterName, // Add reporter's name to the report
           },
         ])
         .select()
@@ -70,12 +76,12 @@ const NewReport = () => {
           studentName: studentData.name,
           incidentType: data.incidentType,
           description: data.description,
+          reporterName: reporterName, // Include reporter's name in notification
         },
       });
 
       if (notificationError) {
         console.error("Error sending notification:", notificationError);
-        // Don't throw here, as the report was still created successfully
       }
 
       toast({
