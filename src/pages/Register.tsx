@@ -13,6 +13,8 @@ const Register = () => {
   const { toast } = useToast();
 
   const handleRegisterSuccess = (email: string, requiresEmailConfirmation: boolean) => {
+    console.log("Registration successful:", { email, requiresEmailConfirmation });
+    
     if (requiresEmailConfirmation) {
       // If email confirmation is required, show the email confirmation screen
       setUserEmail(email);
@@ -32,7 +34,7 @@ const Register = () => {
       });
       
       // Log for debugging
-      console.log("Registration successful, redirecting to login");
+      console.log("Email confirmation not required, redirecting to login");
       
       // Redirect to login
       navigate("/login");
@@ -40,6 +42,7 @@ const Register = () => {
   };
 
   if (emailSent) {
+    console.log("Showing email confirmation screen for:", userEmail);
     return (
       <div className="min-h-screen bg-gradient-to-b from-pink-50 to-pink-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <EmailConfirmation email={userEmail} />

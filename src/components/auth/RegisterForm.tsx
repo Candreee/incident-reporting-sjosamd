@@ -49,7 +49,7 @@ export function RegisterForm({
         data.lastName
       );
       
-      console.log("Registration successful for:", data.email);
+      console.log("Registration result:", result);
       console.log("Email confirmation required:", result.requiresEmailConfirmation);
       
       // Call the success handler with the email and confirmation status
