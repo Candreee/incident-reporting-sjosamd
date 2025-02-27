@@ -34,19 +34,22 @@ export async function signInWithEmailPassword(email: string, password: string) {
   console.log("Signing in with email:", email);
   
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const response = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
-      console.error("Sign-in error:", error);
-      throw error;
+    console.log("Sign-in response:", response);
+    
+    if (response.error) {
+      console.error("Sign-in error:", response.error);
+      throw response.error;
     }
 
-    console.log("Sign-in successful for user:", data.user?.id);
-    console.log("User metadata:", data.user?.user_metadata);
-    return data;
+    console.log("Sign-in successful for user:", response.data.user?.id);
+    console.log("User metadata:", response.data.user?.user_metadata);
+    
+    return response;
   } catch (error) {
     console.error("Sign-in error:", error);
     throw error;
@@ -66,7 +69,7 @@ export async function createUserAccount(
   console.log("Starting signup process for:", email);
   
   // First, create the user in Auth
-  const { data, error: signUpError } = await supabase.auth.signUp({
+  const response = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -79,23 +82,23 @@ export async function createUserAccount(
     },
   });
 
-  if (signUpError) {
-    console.error('Auth signup error:', signUpError);
-    throw signUpError;
+  if (response.error) {
+    console.error('Auth signup error:', response.error);
+    throw response.error;
   }
 
-  if (!data.user) {
+  if (!response.data.user) {
     console.error('No user data returned from signup');
     throw new Error('Failed to create user account');
   }
 
-  console.log("Auth user created successfully:", data.user.id);
-  console.log("User metadata:", data.user.user_metadata);
-  console.log("Session data:", data.session ? "Session exists" : "No session (email confirmation required)");
+  console.log("Auth user created successfully:", response.data.user.id);
+  console.log("User metadata:", response.data.user.user_metadata);
+  console.log("Session data:", response.data.session ? "Session exists" : "No session (email confirmation required)");
 
   // Then create the profile in the user_profiles table
   console.log("Creating user profile with data:", {
-    id: data.user.id,
+    id: response.data.user.id,
     email,
     role,
     first_name: firstName || null,
@@ -105,7 +108,7 @@ export async function createUserAccount(
   const { error: profileError } = await supabase
     .from('user_profiles')
     .insert({
-      id: data.user.id,
+      id: response.data.user.id,
       email,
       role,
       first_name: firstName || null,
@@ -122,7 +125,7 @@ export async function createUserAccount(
     console.log("User profile created successfully");
   }
   
-  return data;
+  return response;
 }
 
 /**

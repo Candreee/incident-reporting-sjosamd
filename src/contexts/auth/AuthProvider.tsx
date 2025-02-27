@@ -31,13 +31,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Step 1: Authenticate with Supabase
       console.log("Starting authentication for:", email);
-      const { user: authUser, session } = await signInWithEmailPassword(email, password);
+      const { data, error } = await signInWithEmailPassword(email, password);
       
-      if (!authUser) {
+      if (error) {
+        console.error("Authentication error:", error);
+        throw error;
+      }
+
+      if (!data.user) {
         console.error("Authentication failed: No user returned");
         throw new Error("Authentication failed");
       }
       
+      const authUser = data.user;
       console.log("Authentication successful for user:", authUser.id);
       console.log("User metadata:", authUser.user_metadata);
       
@@ -72,16 +78,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ) => {
     try {
       setIsLoading(true);
-      const { user, session } = await createUserAccount(email, password, role, firstName, lastName);
+      const { data, error } = await createUserAccount(email, password, role, firstName, lastName);
+      
+      if (error) {
+        console.error("Signup error:", error);
+        throw error;
+      }
       
       // Check if email confirmation is required by examining if there's no user session
-      const requiresEmailConfirmation = !session;
+      const requiresEmailConfirmation = !data.session;
       
       setIsLoading(false);
       
       // Return information about whether email confirmation is required
       return {
-        user,
+        user: data.user,
         requiresEmailConfirmation
       };
     } catch (error) {
