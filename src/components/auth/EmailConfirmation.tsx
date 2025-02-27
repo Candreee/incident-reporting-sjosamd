@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { SchoolLogo } from "@/components/ui/school-logo";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { EnvelopeOpenIcon, CheckCircleIcon } from "lucide-react";
+import { MailOpen, CheckCircle } from "lucide-react";
 
 export const EmailConfirmation = ({ email }: { email?: string }) => {
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ export const EmailConfirmation = ({ email }: { email?: string }) => {
       
       <div className="flex justify-center my-6">
         <div className="bg-pink-100 p-4 rounded-full">
-          <EnvelopeOpenIcon size={36} className="text-pink-600" />
+          <MailOpen size={36} className="text-pink-600" />
         </div>
       </div>
       
@@ -33,7 +33,7 @@ export const EmailConfirmation = ({ email }: { email?: string }) => {
       <div className="space-y-6 mt-4">
         <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
           <div className="flex items-start space-x-2 text-left">
-            <CheckCircleIcon size={20} className="text-green-500 mt-0.5 flex-shrink-0" />
+            <CheckCircle size={20} className="text-green-500 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-gray-600">
               <p className="font-medium mb-1">Important Information</p>
               <p>The verification link will expire in 24 hours</p>
