@@ -92,20 +92,17 @@ const Login = () => {
     console.log("Submitting login form with:", data.email);
     setIsLoading(true);
     try {
-      const authUser = await signIn(data.email, data.password);
-      console.log("Sign-in successful, user:", authUser?.id);
+      const result = await signIn(data.email, data.password);
+      console.log("Sign-in successful, user:", result.user?.id);
+      console.log("User role verified from database:", result.role);
       
       toast({
         title: "Success",
         description: "You have been signed in successfully",
       });
 
-      // Get the user role from metadata
-      const role = authUser?.user_metadata?.role;
-      console.log("User role from metadata:", role);
-
-      // Immediate redirect based on auth data to avoid waiting for profile
-      if (role === 'admin' || role === 'principal') {
+      // Use the verified role from the database to determine redirect
+      if (result.role === 'admin' || result.role === 'principal') {
         navigate('/admin', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });

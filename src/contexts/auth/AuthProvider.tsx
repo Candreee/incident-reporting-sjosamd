@@ -1,6 +1,6 @@
 
 import { useNavigate } from "react-router-dom";
-import { fetchUserProfile, signInWithEmailPassword, createUserAccount, signOutUser } from "./authUtils";
+import { fetchUserProfile, signInWithEmailPassword, createUserAccount, signOutUser, verifyUserRole } from "./authUtils";
 import { AuthContext } from "./AuthContext";
 import { useAuthState } from "./useAuthState";
 
@@ -47,10 +47,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Authentication successful for user:", authUser.id);
       console.log("User metadata:", authUser.user_metadata);
       
+      // Step 2: Verify user role from database BEFORE completing sign-in
+      console.log("Verifying user role before completing sign-in");
+      const userRole = await verifyUserRole(authUser.id);
+      
+      if (!userRole) {
+        console.warn("Role verification failed, will use metadata as fallback");
+      }
+      
+      // Use verified role from database or fallback to metadata
+      const role = userRole || authUser.user_metadata?.role;
+      console.log("User role determined to be:", role);
+      
       // Set user immediately after successful auth
       setUser(authUser);
       
-      // Step 2: Fetch user profile
+      // Step 3: Fetch complete user profile
       const profileSuccess = await refreshProfile(authUser.id);
       if (!profileSuccess) {
         console.warn("Could not fetch user profile, but authentication was successful");
@@ -61,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
       }, 500);
       
-      return authUser;
+      return { user: authUser, role };
     } catch (error) {
       console.error("Login error:", error);
       setIsLoading(false);

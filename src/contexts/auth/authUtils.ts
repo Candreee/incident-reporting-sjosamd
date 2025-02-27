@@ -28,6 +28,32 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
 }
 
 /**
+ * Verify user role from Supabase database
+ * This is used to determine which dashboard they should see
+ */
+export async function verifyUserRole(userId: string): Promise<string | null> {
+  try {
+    console.log("Verifying role for user:", userId);
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error verifying user role:', error);
+      return null;
+    }
+
+    console.log("User role verified:", data.role);
+    return data.role;
+  } catch (error) {
+    console.error("Error in role verification:", error);
+    return null;
+  }
+}
+
+/**
  * Sign in a user with email and password
  */
 export async function signInWithEmailPassword(email: string, password: string) {
