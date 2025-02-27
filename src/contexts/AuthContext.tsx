@@ -40,18 +40,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Check active session
     const initializeAuth = async () => {
       try {
+        setIsLoading(true);
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
           console.error("Error getting session:", sessionError);
-          setIsLoading(false);
           return;
         }
         
-        setUser(session?.user ?? null);
-        
         if (session?.user) {
+          console.log("Active session found for user:", session.user.id);
+          setUser(session.user);
           await fetchProfile(session.user.id);
+        } else {
+          console.log("No active session found");
+          setUser(null);
+          setProfile(null);
         }
       } catch (error) {
         console.error("Error in auth initialization:", error);
@@ -66,11 +70,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session?.user?.id);
       
-      setUser(session?.user ?? null);
-      
       if (session?.user) {
+        setUser(session.user);
         await fetchProfile(session.user.id);
       } else {
+        setUser(null);
         setProfile(null);
       }
     });
@@ -91,14 +95,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('Error fetching profile:', error);
-        // Don't clear user on profile fetch errors
+        // Important: DON'T clear user or setProfile(null) on profile fetch errors
+        // This is likely causing the logout issue
         return;
       }
 
-      console.log("Profile fetched:", data);
+      console.log("Profile fetched successfully:", data);
       setProfile(data);
     } catch (error) {
       console.error("Unexpected error fetching profile:", error);
+      // Don't clear user state on error
     }
   }
 
@@ -108,17 +114,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
 
+      // Fetch profile after successful login
+      if (data.user) {
+        await fetchProfile(data.user.id);
+      }
+      
       // Navigation will be handled by auth state change listener
     } catch (error) {
       console.error("Login error:", error);
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -193,10 +207,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    setProfile(null); // Clear profile immediately
-    navigate('/login');
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setProfile(null);
+      setUser(null);
+      navigate('/login');
+    } catch (error) {
+      console.error("Sign out error:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

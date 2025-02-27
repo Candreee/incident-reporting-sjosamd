@@ -21,6 +21,7 @@ const Settings = () => {
   useEffect(() => {
     const fetchProfileData = async () => {
       if (!user) {
+        console.log("No user in context, redirecting to login");
         navigate("/login");
         return;
       }
@@ -29,6 +30,7 @@ const Settings = () => {
       try {
         // Try to get the profile directly from the context first
         if (profile) {
+          console.log("Using profile from context:", profile);
           setFirstName(profile.first_name || "");
           setLastName(profile.last_name || "");
           setIsFetching(false);
@@ -41,28 +43,32 @@ const Settings = () => {
           .from('user_profiles')
           .select('*')
           .eq('id', user.id)
-          .single();
+          .maybeSingle(); // Use maybeSingle instead of single to prevent errors
 
         if (error) {
           console.error('Error fetching profile in Settings:', error);
-          // Don't immediately redirect if there's an error
-          // This allows the page to stay open so we can see the error
           toast({
             title: "Error",
             description: "Failed to load profile data. Please try again.",
             variant: "destructive",
           });
         } else if (data) {
+          console.log("Profile data fetched successfully:", data);
           setFirstName(data.first_name || "");
           setLastName(data.last_name || "");
           
           // Update the profile in the auth context
           if (refreshProfile) {
-            refreshProfile(user.id);
+            await refreshProfile(user.id);
           }
+        } else {
+          console.log("No profile data found for user");
+          // Handle the case where no profile data is found
+          // We'll continue showing the page but with empty fields
         }
       } catch (error) {
         console.error("Error in profile fetch:", error);
+        // Don't redirect on error - allow the user to still see the page
       } finally {
         setIsFetching(false);
       }
@@ -72,7 +78,14 @@ const Settings = () => {
   }, [user, profile, navigate, toast, refreshProfile]);
 
   const handleUpdateNames = async () => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to update your profile",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -96,13 +109,13 @@ const Settings = () => {
 
       toast({
         title: "Success",
-        description: "Name updated successfully",
+        description: "Profile updated successfully",
       });
     } catch (error) {
-      console.error("Error updating name:", error);
+      console.error("Error updating profile:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update name",
+        description: error instanceof Error ? error.message : "Failed to update profile",
         variant: "destructive",
       });
     } finally {
@@ -126,6 +139,13 @@ const Settings = () => {
       });
     }
   };
+
+  // If the user is not present and not in the loading state, redirect to login
+  if (!user && !isFetching) {
+    console.log("No user detected while not in fetching state, redirecting to login");
+    navigate("/login");
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -186,7 +206,7 @@ const Settings = () => {
                 disabled={isLoading}
                 className="w-full"
               >
-                {isLoading ? "Updating..." : "Update Names"}
+                {isLoading ? "Updating..." : "Update Profile"}
               </Button>
 
               <div className="pt-4 border-t">
