@@ -1,0 +1,68 @@
+
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { User } from "@supabase/supabase-js";
+import { UserProfile } from "./types";
+import { fetchUserProfile } from "./authUtils";
+
+export function useAuthState() {
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Check active session
+    const initializeAuth = async () => {
+      try {
+        setIsLoading(true);
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Error getting session:", sessionError);
+          return;
+        }
+        
+        if (session?.user) {
+          console.log("Active session found for user:", session.user.id);
+          setUser(session.user);
+          const userProfile = await fetchUserProfile(session.user.id);
+          if (userProfile) {
+            setProfile(userProfile);
+          }
+        } else {
+          console.log("No active session found");
+          setUser(null);
+          setProfile(null);
+        }
+      } catch (error) {
+        console.error("Error in auth initialization:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session?.user?.id);
+      
+      if (session?.user) {
+        setUser(session.user);
+        const userProfile = await fetchUserProfile(session.user.id);
+        if (userProfile) {
+          setProfile(userProfile);
+        }
+      } else {
+        setUser(null);
+        setProfile(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  return { user, profile, isLoading, setIsLoading, setUser, setProfile };
+}
