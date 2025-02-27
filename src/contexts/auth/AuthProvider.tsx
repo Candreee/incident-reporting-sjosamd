@@ -9,9 +9,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   const refreshProfile = async (userId: string) => {
-    const fetchedProfile = await fetchUserProfile(userId);
-    if (fetchedProfile) {
-      setProfile(fetchedProfile);
+    try {
+      const fetchedProfile = await fetchUserProfile(userId);
+      if (fetchedProfile) {
+        setProfile(fetchedProfile);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error refreshing profile:", error);
+      return false;
     }
   };
 
@@ -19,14 +26,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       
+      // Step 1: Authenticate with Supabase
       const { user: authUser } = await signInWithEmailPassword(email, password);
-
-      // Fetch profile after successful login
-      if (authUser) {
-        await refreshProfile(authUser.id);
+      
+      if (!authUser) {
+        throw new Error("Authentication failed");
       }
       
-      // Navigation will be handled by auth state change listener in useEffect
+      setUser(authUser);
+      
+      // Step 2: Fetch user profile
+      const profileSuccess = await refreshProfile(authUser.id);
+      
+      if (!profileSuccess) {
+        console.warn("Could not fetch user profile, will proceed with authentication only");
+      }
+      
+      return authUser;
     } catch (error) {
       console.error("Login error:", error);
       throw error;

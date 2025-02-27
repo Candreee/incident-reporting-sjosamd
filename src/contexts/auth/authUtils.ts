@@ -33,18 +33,23 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
 export async function signInWithEmailPassword(email: string, password: string) {
   console.log("Signing in with email:", email);
   
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  if (error) {
+    if (error) {
+      console.error("Sign-in error:", error);
+      throw error;
+    }
+
+    console.log("Sign-in successful for user:", data.user?.id);
+    return data;
+  } catch (error) {
     console.error("Sign-in error:", error);
     throw error;
   }
-
-  console.log("Sign-in successful for user:", data.user?.id);
-  return data;
 }
 
 /**
@@ -140,4 +145,3 @@ export async function signOutUser() {
   if (error) throw error;
   return true;
 }
-

@@ -19,15 +19,23 @@ export function useAuthState() {
         
         if (sessionError) {
           console.error("Error getting session:", sessionError);
+          setIsLoading(false);
           return;
         }
         
         if (session?.user) {
           console.log("Active session found for user:", session.user.id);
           setUser(session.user);
-          const userProfile = await fetchUserProfile(session.user.id);
-          if (userProfile) {
-            setProfile(userProfile);
+          
+          try {
+            const userProfile = await fetchUserProfile(session.user.id);
+            if (userProfile) {
+              setProfile(userProfile);
+            } else {
+              console.warn("No profile found for user:", session.user.id);
+            }
+          } catch (profileError) {
+            console.error("Error fetching user profile:", profileError);
           }
         } else {
           console.log("No active session found");
@@ -49,9 +57,16 @@ export function useAuthState() {
       
       if (session?.user) {
         setUser(session.user);
-        const userProfile = await fetchUserProfile(session.user.id);
-        if (userProfile) {
-          setProfile(userProfile);
+        
+        try {
+          const userProfile = await fetchUserProfile(session.user.id);
+          if (userProfile) {
+            setProfile(userProfile);
+          } else {
+            console.warn("No profile found after auth state change for user:", session.user.id);
+          }
+        } catch (profileError) {
+          console.error("Error fetching user profile after auth state change:", profileError);
         }
       } else {
         setUser(null);

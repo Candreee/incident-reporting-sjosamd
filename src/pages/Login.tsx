@@ -54,6 +54,8 @@ const Login = () => {
       } else {
         navigate('/dashboard', { replace: true });
       }
+    } else if (user && !profile) {
+      console.log("Login: User logged in but no profile found yet");
     }
   }, [user, profile, navigate]);
 
@@ -90,13 +92,28 @@ const Login = () => {
     console.log("Submitting login form with:", data.email);
     setIsLoading(true);
     try {
-      await signIn(data.email, data.password);
+      const user = await signIn(data.email, data.password);
       console.log("Sign-in successful");
+      
+      // Set a short timeout to allow profile to be fetched before redirecting
+      // This prevents the "signing in..." state from being stuck
+      setTimeout(() => {
+        if (!profile) {
+          console.log("Profile not available after timeout, redirecting anyway");
+          
+          if (user.user_metadata?.role === 'admin') {
+            navigate('/admin', { replace: true });
+          } else {
+            navigate('/dashboard', { replace: true });
+          }
+        }
+        // If profile is available, the useEffect will handle navigation
+      }, 500);
+      
       toast({
         title: "Success",
         description: "You have been signed in successfully",
       });
-      // The navigate will happen in the useEffect above
     } catch (error) {
       console.error("Login error:", error);
       toast({
@@ -104,7 +121,6 @@ const Login = () => {
         description: error instanceof Error ? error.message : "Failed to sign in",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
