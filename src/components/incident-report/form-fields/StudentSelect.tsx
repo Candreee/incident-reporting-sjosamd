@@ -1,10 +1,8 @@
 
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
-import type { Student, SupabaseStudent } from "@/types/student";
 import type { UseFormReturn } from "react-hook-form";
 import type { IncidentFormData } from "@/schemas/incidentFormSchema";
 
@@ -12,68 +10,83 @@ interface StudentSelectProps {
   form: UseFormReturn<IncidentFormData>;
 }
 
+interface Student {
+  id: number;
+  name: string;
+  grade?: string;
+}
+
 export function StudentSelect({ form }: StudentSelectProps) {
   const [students, setStudents] = useState<Student[]>([]);
-  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const { data, error } = await supabase
+          .from("students")
+          .select("id, name, grade")
+          .order("name");
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        setStudents(data || []);
+      } catch (err) {
+        console.error("Error fetching students:", err);
+        setError("Failed to load students. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     fetchStudents();
   }, []);
-
-  const fetchStudents = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("students")
-        .select(`
-          *,
-          incident_count: incident_reports (count)
-        `)
-        .order("name");
-
-      if (error) throw error;
-
-      const transformedStudents: Student[] = (data as SupabaseStudent[]).map(student => ({
-        id: student.id,
-        name: student.name,
-        grade: student.grade,
-        incident_count: student.incident_count?.[0]?.count || 0
-      }));
-
-      setStudents(transformedStudents);
-    } catch (error) {
-      console.error("Error fetching students:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load students list",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <FormField
       control={form.control}
       name="studentId"
       render={({ field }) => (
-        <FormItem>
-          <FormLabel>Student</FormLabel>
-          <Select 
-            onValueChange={(value) => field.onChange(parseInt(value))} 
-            value={field.value?.toString()}
-          >
-            <FormControl>
-              <SelectTrigger>
+        <FormItem className="bg-amber-50 p-4 rounded-md border border-amber-200">
+          <FormLabel className="text-amber-800 font-medium">Student *</FormLabel>
+          <FormControl>
+            <Select
+              disabled={isLoading}
+              onValueChange={(value) => field.onChange(parseInt(value))}
+              value={field.value?.toString()}
+            >
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select a student" />
               </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              {students.map((student) => (
-                <SelectItem key={student.id} value={student.id.toString()}>
-                  {student.name} - {student.grade}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <SelectContent>
+                {error ? (
+                  <SelectItem value="error" disabled>
+                    Error loading students
+                  </SelectItem>
+                ) : isLoading ? (
+                  <SelectItem value="loading" disabled>
+                    Loading students...
+                  </SelectItem>
+                ) : students.length === 0 ? (
+                  <SelectItem value="empty" disabled>
+                    No students found
+                  </SelectItem>
+                ) : (
+                  students.map((student) => (
+                    <SelectItem key={student.id} value={student.id.toString()}>
+                      {student.name} {student.grade ? `(${student.grade})` : ""}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </FormControl>
           <FormMessage />
         </FormItem>
       )}

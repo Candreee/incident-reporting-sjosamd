@@ -29,6 +29,8 @@ const NewReport = () => {
 
   const onSubmit = async (data: IncidentFormData) => {
     try {
+      console.log("Submitting incident report with data:", data);
+      
       // Set status to approved if user is admin or principal
       const status = profile?.role === "admin" || profile?.role === "principal" 
         ? "approved" 
@@ -41,7 +43,10 @@ const NewReport = () => {
         .eq("id", data.studentId)
         .single();
 
-      if (studentError) throw studentError;
+      if (studentError) {
+        console.error("Error fetching student data:", studentError);
+        throw new Error(`Failed to fetch student data: ${studentError.message}`);
+      }
 
       // Construct reporter's full name
       const reporterName = profile 
@@ -50,6 +55,8 @@ const NewReport = () => {
 
       // Combine date and time for the incident_date field in the database
       const combinedDateTime = `${data.incidentDate}T${data.incidentTime}:00`;
+
+      console.log("Inserting report with combined date/time:", combinedDateTime);
 
       // Insert the report
       const { data: insertedReport, error } = await supabase
@@ -65,26 +72,39 @@ const NewReport = () => {
             status: status,
             created_by: (await supabase.auth.getUser()).data.user?.id,
             reporter_name: reporterName,
+            evidence_url: data.evidenceUrl || null,
+            evidence_type: data.evidenceType || null,
           },
         ])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error inserting report:", error);
+        throw new Error(`Failed to insert report: ${error.message}`);
+      }
+
+      console.log("Report inserted successfully:", insertedReport);
 
       // Send notification to admins and principals
-      const { error: notificationError } = await supabase.functions.invoke('notify-incident', {
-        body: {
-          reportId: insertedReport.id,
-          studentName: studentData.name,
-          incidentType: data.incidentType,
-          description: data.description,
-          reporterName: reporterName,
-        },
-      });
+      try {
+        const { error: notificationError } = await supabase.functions.invoke('notify-incident', {
+          body: {
+            reportId: insertedReport.id,
+            studentName: studentData.name,
+            incidentType: data.incidentType,
+            description: data.description,
+            reporterName: reporterName,
+          },
+        });
 
-      if (notificationError) {
-        console.error("Error sending notification:", notificationError);
+        if (notificationError) {
+          console.error("Error sending notification:", notificationError);
+          // Continue execution even if notification fails
+        }
+      } catch (notifyError) {
+        console.error("Exception sending notification:", notifyError);
+        // Continue execution even if notification fails
       }
 
       toast({
@@ -96,7 +116,7 @@ const NewReport = () => {
       console.error("Error submitting form:", error);
       toast({
         title: "Error",
-        description: "Failed to submit incident report",
+        description: `Failed to submit incident report: ${error.message || "Unknown error"}`,
         variant: "destructive",
       });
     }
@@ -112,7 +132,12 @@ const NewReport = () => {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <IncidentFormFields form={form} />
               <div className="flex justify-end">
-                <Button type="submit">Submit Report</Button>
+                <Button 
+                  type="submit" 
+                  disabled={form.formState.isSubmitting}
+                >
+                  {form.formState.isSubmitting ? "Submitting..." : "Submit Report"}
+                </Button>
               </div>
             </form>
           </Form>
