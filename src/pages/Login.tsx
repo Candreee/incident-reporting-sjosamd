@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { SchoolLogo } from "@/components/ui/school-logo";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -39,18 +40,22 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-gray-50 to-gray-100">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-pink-50 to-pink-100">
       <Card className="w-full max-w-md p-6 space-y-6">
         <div className="flex items-center space-x-2">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate("/")}
-            className="hover:bg-gray-100"
+            className="hover:bg-pink-100"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-2xl font-semibold">Sign In</h1>
+        </div>
+
+        <div className="flex justify-center py-4">
+          <SchoolLogo size="lg" />
         </div>
 
         <form onSubmit={handleSignIn} className="space-y-4">
@@ -79,7 +84,7 @@ const Login = () => {
 
           <Button
             type="submit"
-            className="w-full"
+            className="w-full bg-pink-600 hover:bg-pink-700"
             disabled={loading}
           >
             {loading ? "Signing in..." : "Sign In"}

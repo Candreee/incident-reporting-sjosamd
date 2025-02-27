@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { SchoolLogo } from "@/components/ui/school-logo";
 
 export function IncidentReportHeader() {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ export function IncidentReportHeader() {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
+          <SchoolLogo size="sm" className="mr-3" />
           <h1 className="text-2xl font-semibold text-gray-900">New Incident Report</h1>
         </div>
       </div>

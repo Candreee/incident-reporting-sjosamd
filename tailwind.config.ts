@@ -53,6 +53,55 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // School logo colors
+        pink: {
+          50: "#fdf2f8",
+          100: "#fce7f3",
+          200: "#fbcfe8",
+          300: "#f9a8d4",
+          400: "#f472b6",
+          500: "#ec4899",
+          600: "#E9218C", // Logo pink
+          700: "#be185d",
+          800: "#9d174d",
+          900: "#831843",
+        },
+        blue: {
+          50: "#f0f9ff",
+          100: "#e0f2fe",
+          200: "#bae6fd",
+          300: "#7dd3fc",
+          400: "#38bdf8",
+          500: "#0ea5e9",
+          600: "#00A6E3", // Logo blue
+          700: "#0369a1",
+          800: "#075985",
+          900: "#0c4a6e",
+        },
+        yellow: {
+          50: "#fefce8",
+          100: "#fef9c3",
+          200: "#fef08a",
+          300: "#fde047",
+          400: "#facc15",
+          500: "#FFCB05", // Logo yellow
+          600: "#ca8a04",
+          700: "#a16207",
+          800: "#854d0e",
+          900: "#713f12",
+        },
+        orange: {
+          50: "#fff7ed",
+          100: "#ffedd5",
+          200: "#fed7aa",
+          300: "#fdba74",
+          400: "#fb923c",
+          500: "#f97316",
+          600: "#F26522", // Logo orange
+          700: "#c2410c",
+          800: "#9a3412",
+          900: "#7c2d12",
+        },
       },
       keyframes: {
         "accordion-down": {
