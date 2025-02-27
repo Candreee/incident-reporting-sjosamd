@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { ReportStatusFilter } from "@/components/incident-report/ReportStatusFilter";
@@ -7,7 +8,6 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { DashboardReportsTable } from "@/components/dashboard/DashboardReportsTable";
 import { useAuth } from "@/contexts/auth";
-import { useNavigate } from "react-router-dom";
 import type { Database } from "@/integrations/supabase/types";
 
 type IncidentReport = Database["public"]["Tables"]["incident_reports"]["Row"];
@@ -19,26 +19,37 @@ const Dashboard = () => {
   const [typeFilter, setTypeFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const { user, profile } = useAuth();
+  const { user, profile, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
 
+  // Add debug logging
+  console.log("Dashboard: Auth state -", { user, profile, authLoading });
+
   useEffect(() => {
-    // Check if user is authenticated
-    if (!user) {
-      console.log("Dashboard: User not authenticated, redirecting to login");
-      navigate("/login");
-      return;
-    }
+    // Only proceed with checks if auth loading is finished
+    if (!authLoading) {
+      // If no user is authenticated, redirect to login
+      if (!user) {
+        console.log("Dashboard: No user found, redirecting to login");
+        navigate("/login");
+        return;
+      }
 
-    // Check if user is admin, redirect if needed
-    if (profile?.role === 'admin') {
-      console.log("Dashboard: User is admin, redirecting to admin dashboard");
-      navigate("/admin");
-      return;
+      // If profile is loaded, check role and fetch data
+      if (profile) {
+        console.log("Dashboard: User profile loaded -", profile);
+        // Check if user is admin, redirect if needed
+        if (profile.role === 'admin') {
+          console.log("Dashboard: User is admin, redirecting to admin dashboard");
+          navigate("/admin");
+          return;
+        }
+        
+        // User is authenticated and not admin, fetch reports
+        fetchReports();
+      }
     }
-
-    fetchReports();
-  }, [user, profile, navigate, toast]);
+  }, [user, profile, authLoading, navigate]);
 
   useEffect(() => {
     let filtered = [...reports];
@@ -63,7 +74,8 @@ const Dashboard = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-
+      
+      console.log("Dashboard: Reports fetched -", data?.length || 0);
       setReports(data || []);
       setFilteredReports(data || []);
     } catch (error) {
@@ -78,9 +90,27 @@ const Dashboard = () => {
     }
   };
 
-  // If still checking authentication status, show loading
+  // Show loading state while auth is loading
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">Loading authentication...</p>
+      </div>
+    );
+  }
+
+  // If not authenticated, redirect to login (handled in useEffect)
   if (!user) {
-    return null; // Will be redirected in useEffect
+    return null;
+  }
+
+  // If profile is not loaded yet, show loading
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">Loading user profile...</p>
+      </div>
+    );
   }
 
   return (

@@ -16,25 +16,46 @@ const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { profile } = useAuth();
+  const { user, profile, isLoading: authLoading } = useAuth();
+
+  // Additional debug logs
+  console.log("AdminDashboard: Auth state -", { user, profile, authLoading });
 
   useEffect(() => {
-    if (profile && profile.role !== 'admin' && profile.role !== 'principal') {
-      navigate('/dashboard');
-      return;
+    // Only check and redirect if auth is finished loading
+    if (!authLoading) {
+      // If no user is authenticated, redirect to login
+      if (!user) {
+        console.log("AdminDashboard: No user found, redirecting to login");
+        navigate('/login');
+        return;
+      }
+      
+      // If profile is loaded and user is not admin, redirect to appropriate dashboard
+      if (profile) {
+        console.log("AdminDashboard: User profile loaded -", profile);
+        if (profile.role !== 'admin' && profile.role !== 'principal') {
+          console.log("AdminDashboard: User not authorized, redirecting to dashboard");
+          navigate('/dashboard');
+          return;
+        }
+        
+        // User is authenticated and authorized, fetch reports
+        fetchReports();
+      }
     }
-
-    fetchReports();
-  }, [profile, navigate]);
+  }, [user, profile, authLoading, navigate]);
 
   const fetchReports = async () => {
     try {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from("incident_reports")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
+      console.log("AdminDashboard: Reports fetched -", data?.length || 0);
       setReports(data || []);
     } catch (error) {
       console.error("Error fetching reports:", error);
@@ -97,6 +118,29 @@ const AdminDashboard = () => {
       });
     }
   };
+
+  // Show loading state while auth is loading
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">Loading authentication...</p>
+      </div>
+    );
+  }
+
+  // If not authenticated, redirect to login (handled in useEffect)
+  if (!user) {
+    return null;
+  }
+
+  // If profile is not loaded yet, show loading
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">Loading user profile...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
