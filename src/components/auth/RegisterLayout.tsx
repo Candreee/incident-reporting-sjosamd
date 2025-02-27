@@ -3,7 +3,6 @@ import { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { SchoolLogo } from "@/components/ui/school-logo";
 import { useNavigate } from "react-router-dom";
 
 interface RegisterLayoutProps {
@@ -26,10 +25,6 @@ export const RegisterLayout = ({ children }: RegisterLayoutProps) => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-2xl font-semibold">Create Account</h1>
-        </div>
-
-        <div className="flex justify-center py-4">
-          <SchoolLogo size="lg" />
         </div>
 
         {children}
