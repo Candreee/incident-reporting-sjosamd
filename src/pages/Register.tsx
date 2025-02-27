@@ -3,9 +3,23 @@ import { useState } from "react";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { EmailConfirmation } from "@/components/auth/EmailConfirmation";
 import { RegisterLayout } from "@/components/auth/RegisterLayout";
+import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const [emailSent, setEmailSent] = useState(false);
+  const navigate = useNavigate();
+
+  const handleRegisterSuccess = (email: string, password: string) => {
+    // Instead of showing email confirmation, redirect to login with credentials
+    navigate("/login", { 
+      state: { 
+        autoLogin: { 
+          email, 
+          password 
+        } 
+      } 
+    });
+  };
 
   if (emailSent) {
     return (
@@ -17,7 +31,7 @@ const Register = () => {
 
   return (
     <RegisterLayout>
-      <RegisterForm onRegisterSuccess={() => setEmailSent(true)} />
+      <RegisterForm onRegisterSuccess={handleRegisterSuccess} />
     </RegisterLayout>
   );
 };

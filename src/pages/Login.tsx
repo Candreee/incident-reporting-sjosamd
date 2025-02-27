@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -29,14 +29,18 @@ type LoginFormData = z.infer<typeof loginSchema>;
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { signIn, user, profile } = useAuth();
+
+  // Get auto-login credentials from location state (if coming from registration)
+  const autoLoginCredentials = location.state?.autoLogin;
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: autoLoginCredentials?.email || "",
+      password: autoLoginCredentials?.password || "",
     },
   });
 
@@ -51,6 +55,34 @@ const Login = () => {
       }
     }
   }, [user, profile, navigate]);
+
+  // Attempt auto-login if credentials are provided
+  useEffect(() => {
+    const performAutoLogin = async () => {
+      if (autoLoginCredentials && !user) {
+        setIsLoading(true);
+        try {
+          await signIn(autoLoginCredentials.email, autoLoginCredentials.password);
+          toast({
+            title: "Welcome!",
+            description: "You've been automatically logged in.",
+          });
+          // Navigation will be handled by the user/profile useEffect
+        } catch (error) {
+          console.error("Auto-login error:", error);
+          toast({
+            title: "Auto-login failed",
+            description: "Please log in manually.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    performAutoLogin();
+  }, [autoLoginCredentials, signIn, toast, user]);
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
