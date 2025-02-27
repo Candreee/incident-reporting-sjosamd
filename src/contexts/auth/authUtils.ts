@@ -122,33 +122,55 @@ export async function createUserAccount(
   console.log("User metadata:", response.data.user.user_metadata);
   console.log("Session data:", response.data.session ? "Session exists" : "No session (email confirmation required)");
 
-  // Then create the profile in the user_profiles table
-  console.log("Creating user profile with data:", {
-    id: response.data.user.id,
-    email,
-    role,
-    first_name: firstName || null,
-    last_name: lastName || null
-  });
-  
-  const { error: profileError } = await supabase
-    .from('user_profiles')
-    .insert({
+  try {
+    // Create the profile in the user_profiles table
+    console.log("Creating user profile with data:", {
       id: response.data.user.id,
       email,
       role,
       first_name: firstName || null,
-      last_name: lastName || null,
+      last_name: lastName || null
     });
-
-  if (profileError) {
-    console.error('Profile creation error:', profileError);
     
-    // If profile creation fails, log the error but continue
-    // since the user is created in auth system
-    console.error('Profile creation failed but user was created in auth system');
-  } else {
-    console.log("User profile created successfully");
+    const { error: profileError } = await supabase
+      .from('user_profiles')
+      .insert([{
+        id: response.data.user.id,
+        email,
+        role,
+        first_name: firstName || null,
+        last_name: lastName || null,
+      }]);
+
+    if (profileError) {
+      console.error('Profile creation error:', profileError);
+      
+      // If profile creation fails, attempt to update the profile instead
+      // This handles cases where the profile might already exist
+      console.log("Attempting to update profile instead...");
+      
+      const { error: updateError } = await supabase
+        .from('user_profiles')
+        .update({
+          email,
+          role,
+          first_name: firstName || null,
+          last_name: lastName || null,
+        })
+        .eq('id', response.data.user.id);
+        
+      if (updateError) {
+        console.error('Profile update also failed:', updateError);
+      } else {
+        console.log("User profile updated successfully");
+      }
+    } else {
+      console.log("User profile created successfully");
+    }
+  } catch (error) {
+    // Log the error but don't throw, as we want to return the auth user
+    // even if profile creation fails
+    console.error("Error during profile creation:", error);
   }
   
   return response;

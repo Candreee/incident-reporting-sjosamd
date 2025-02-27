@@ -52,6 +52,14 @@ export function RegisterForm({
       console.log("Registration result:", result);
       console.log("Email confirmation required:", result.requiresEmailConfirmation);
       
+      toast({
+        title: "Account Created",
+        description: result.requiresEmailConfirmation 
+          ? "Please check your email to verify your account" 
+          : "Your account has been created successfully",
+        duration: 5000,
+      });
+      
       // Call the success handler with the email and confirmation status
       onRegisterSuccess(data.email, result.requiresEmailConfirmation);
     } catch (error) {
