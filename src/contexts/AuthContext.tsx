@@ -17,7 +17,13 @@ type AuthContextType = {
   profile: UserProfile | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, role: 'admin' | 'teacher' | 'principal') => Promise<void>;
+  signUp: (
+    email: string, 
+    password: string, 
+    role: 'admin' | 'teacher' | 'principal',
+    firstName?: string,
+    lastName?: string
+  ) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -80,13 +86,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     navigate('/dashboard');
   };
 
-  const signUp = async (email: string, password: string, role: 'admin' | 'teacher' | 'principal') => {
+  const signUp = async (
+    email: string, 
+    password: string, 
+    role: 'admin' | 'teacher' | 'principal',
+    firstName?: string,
+    lastName?: string
+  ) => {
     const { error: signUpError, data } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           role,
+          first_name: firstName,
+          last_name: lastName,
         },
       },
     });
@@ -102,13 +116,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             id: data.user.id,
             email,
             role,
+            first_name: firstName,
+            last_name: lastName,
           },
         ]);
 
       if (profileError) throw profileError;
     }
 
-    navigate('/dashboard');
+    // Don't navigate automatically - let the component handle navigation
+    // This will typically redirect to login after successful registration
   };
 
   const signOut = async () => {
