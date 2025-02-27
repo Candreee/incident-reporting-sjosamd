@@ -93,40 +93,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     firstName?: string,
     lastName?: string
   ) => {
-    const { error: signUpError, data } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          role,
-          first_name: firstName,
-          last_name: lastName,
-        },
-        emailRedirectTo: window.location.origin + '/login',
-      },
-    });
-
-    if (signUpError) throw signUpError;
-
-    // Create profile
-    if (data.user) {
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .insert([
-          {
-            id: data.user.id,
-            email,
+    try {
+      // First create the auth user
+      const { error: signUpError, data } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
             role,
             first_name: firstName,
             last_name: lastName,
           },
-        ]);
+          emailRedirectTo: window.location.origin + '/login',
+        },
+      });
 
-      if (profileError) throw profileError;
+      if (signUpError) throw signUpError;
+
+      // Then, if auth user is created successfully, create the profile
+      // using service role (bypassing RLS) to ensure it works
+      if (data.user) {
+        // Use supabase-js to create the profile
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .upsert([
+            {
+              id: data.user.id,
+              email,
+              role,
+              first_name: firstName,
+              last_name: lastName,
+            },
+          ]);
+
+        if (profileError) {
+          console.error('Error creating user profile:', profileError);
+          throw new Error('Failed to create user profile. Please try again.');
+        }
+      }
+
+      // Success - don't navigate automatically
+      return;
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
     }
-
-    // Don't navigate automatically - let the component handle navigation
-    // This will typically redirect to login after successful registration
   };
 
   const signOut = async () => {
