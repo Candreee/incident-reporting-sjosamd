@@ -94,8 +94,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     lastName?: string
   ) => {
     try {
-      // First create the auth user
-      const { error: signUpError, data } = await supabase.auth.signUp({
+      // Step 1: Create the auth user with Supabase Auth
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -104,35 +104,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             first_name: firstName,
             last_name: lastName,
           },
-          emailRedirectTo: window.location.origin + '/login',
+          emailRedirectTo: `${window.location.origin}/login`,
         },
       });
 
-      if (signUpError) throw signUpError;
-
-      // Then, if auth user is created successfully, create the profile
-      // using service role (bypassing RLS) to ensure it works
-      if (data.user) {
-        // Use supabase-js to create the profile
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .upsert([
-            {
-              id: data.user.id,
-              email,
-              role,
-              first_name: firstName,
-              last_name: lastName,
-            },
-          ]);
-
-        if (profileError) {
-          console.error('Error creating user profile:', profileError);
-          throw new Error('Failed to create user profile. Please try again.');
-        }
+      if (signUpError) {
+        console.error('Auth signup error:', signUpError);
+        throw signUpError;
       }
 
-      // Success - don't navigate automatically
+      if (!data.user) {
+        throw new Error('Failed to create user account');
+      }
+
+      // Step 2: Create the user profile in the user_profiles table
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .insert([
+          {
+            id: data.user.id,
+            email,
+            role,
+            first_name: firstName,
+            last_name: lastName,
+          },
+        ]);
+
+      if (profileError) {
+        console.error('Profile creation error:', profileError);
+        throw new Error('Failed to create user profile. Please try again.');
+      }
+
+      // Success - return without automatic navigation
       return;
     } catch (error) {
       console.error('Registration error:', error);
