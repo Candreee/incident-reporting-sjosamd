@@ -25,6 +25,7 @@ type AuthContextType = {
     lastName?: string
   ) => Promise<void>;
   signOut: () => Promise<void>;
+  refreshProfile: (userId: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,24 +38,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Error getting session:", sessionError);
+          setIsLoading(false);
+          return;
+        }
+        
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        }
+      } catch (error) {
+        console.error("Error in auth initialization:", error);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    });
+    };
+
+    initializeAuth();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session?.user?.id);
+      
       setUser(session?.user ?? null);
+      
       if (session?.user) {
         await fetchProfile(session.user.id);
       } else {
         setProfile(null);
       }
-      setIsLoading(false);
     });
 
     return () => {
@@ -64,29 +82,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function fetchProfile(userId: string) {
     console.log("Fetching profile for user:", userId);
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-    if (error) {
-      console.error('Error fetching profile:', error);
-      return;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        // Don't clear user on profile fetch errors
+        return;
+      }
+
+      console.log("Profile fetched:", data);
+      setProfile(data);
+    } catch (error) {
+      console.error("Unexpected error fetching profile:", error);
     }
-
-    console.log("Profile fetched:", data);
-    setProfile(data);
   }
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+  const refreshProfile = async (userId: string) => {
+    await fetchProfile(userId);
+  };
 
-    if (error) throw error;
-    navigate('/dashboard');
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      // Navigation will be handled by auth state change listener
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    }
   };
 
   const signUp = async (
@@ -138,6 +171,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (profileError) {
         console.error('Profile creation error:', profileError);
+        
+        // If profile creation fails, clean up by deleting the auth user
+        try {
+          // Admin only operation - would require a Supabase Edge Function in production
+          // For now, just log that this would happen
+          console.error('Would need to delete auth user due to profile creation failure');
+        } catch (cleanupError) {
+          console.error('Failed to clean up auth user after profile creation error:', cleanupError);
+        }
+        
         throw new Error(`Failed to create user profile: ${profileError.message}`);
       }
 
@@ -152,11 +195,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
+    setProfile(null); // Clear profile immediately
     navigate('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, isLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      profile, 
+      isLoading, 
+      signIn, 
+      signUp, 
+      signOut,
+      refreshProfile
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -10,22 +10,66 @@ import { Settings as SettingsIcon, LogOut, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const Settings = () => {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, refreshProfile } = useAuth();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!user || !profile) {
-      navigate("/login");
-      return;
-    }
-    // Initialize name states with current profile names
-    setFirstName(profile.first_name || "");
-    setLastName(profile.last_name || "");
-  }, [user, profile, navigate]);
+    const fetchProfileData = async () => {
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+      
+      setIsFetching(true);
+      try {
+        // Try to get the profile directly from the context first
+        if (profile) {
+          setFirstName(profile.first_name || "");
+          setLastName(profile.last_name || "");
+          setIsFetching(false);
+          return;
+        }
+        
+        // If no profile in context, try to fetch it manually
+        console.log("Manually fetching profile for user:", user.id);
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching profile in Settings:', error);
+          // Don't immediately redirect if there's an error
+          // This allows the page to stay open so we can see the error
+          toast({
+            title: "Error",
+            description: "Failed to load profile data. Please try again.",
+            variant: "destructive",
+          });
+        } else if (data) {
+          setFirstName(data.first_name || "");
+          setLastName(data.last_name || "");
+          
+          // Update the profile in the auth context
+          if (refreshProfile) {
+            refreshProfile(user.id);
+          }
+        }
+      } catch (error) {
+        console.error("Error in profile fetch:", error);
+      } finally {
+        setIsFetching(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [user, profile, navigate, toast, refreshProfile]);
 
   const handleUpdateNames = async () => {
     if (!user) return;
@@ -40,7 +84,15 @@ const Settings = () => {
         })
         .eq("id", user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating name:", error);
+        throw error;
+      }
+
+      // Refresh the profile in context after update
+      if (refreshProfile) {
+        await refreshProfile(user.id);
+      }
 
       toast({
         title: "Success",
@@ -50,7 +102,7 @@ const Settings = () => {
       console.error("Error updating name:", error);
       toast({
         title: "Error",
-        description: "Failed to update name",
+        description: error instanceof Error ? error.message : "Failed to update name",
         variant: "destructive",
       });
     } finally {
@@ -87,63 +139,69 @@ const Settings = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Card className="max-w-2xl mx-auto p-6 space-y-6">
-          <div className="flex items-center gap-3 pb-6 border-b">
-            <User className="h-12 w-12 text-gray-400 bg-gray-100 p-2 rounded-full" />
-            <div>
-              <h2 className="font-semibold text-xl text-gray-900">User Profile</h2>
-              <p className="text-sm text-gray-500">Manage your account settings</p>
-            </div>
+        {isFetching ? (
+          <div className="text-center py-6">
+            <p>Loading profile data...</p>
           </div>
-
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-gray-500">Email</p>
-              <p className="text-base text-gray-900">{profile?.email}</p>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-500">First Name</p>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add your first name"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                />
+        ) : (
+          <Card className="max-w-2xl mx-auto p-6 space-y-6">
+            <div className="flex items-center gap-3 pb-6 border-b">
+              <User className="h-12 w-12 text-gray-400 bg-gray-100 p-2 rounded-full" />
+              <div>
+                <h2 className="font-semibold text-xl text-gray-900">User Profile</h2>
+                <p className="text-sm text-gray-500">Manage your account settings</p>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-500">Last Name</p>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add your last name"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                />
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Email</p>
+                <p className="text-base text-gray-900">{profile?.email || user?.email}</p>
               </div>
-            </div>
 
-            <Button
-              onClick={handleUpdateNames}
-              disabled={isLoading || (!firstName && !lastName)}
-              className="w-full"
-            >
-              {isLoading ? "Updating..." : "Update Names"}
-            </Button>
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-500">First Name</p>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Add your first name"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                </div>
+              </div>
 
-            <div className="pt-4 border-t">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-500">Last Name</p>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Add your last name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                </div>
+              </div>
+
               <Button
-                variant="outline"
-                className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={handleSignOut}
+                onClick={handleUpdateNames}
+                disabled={isLoading}
+                className="w-full"
               >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
+                {isLoading ? "Updating..." : "Update Names"}
               </Button>
+
+              <div className="pt-4 border-t">
+                <Button
+                  variant="outline"
+                  className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        )}
       </main>
     </div>
   );
