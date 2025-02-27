@@ -31,14 +31,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Step 1: Authenticate with Supabase
       console.log("Starting authentication for:", email);
-      const result = await signInWithEmailPassword(email, password);
+      const { user: authUser, session } = await signInWithEmailPassword(email, password);
       
-      if (!result.user) {
+      if (!authUser) {
         console.error("Authentication failed: No user returned");
         throw new Error("Authentication failed");
       }
       
-      const authUser = result.user;
       console.log("Authentication successful for user:", authUser.id);
       console.log("User metadata:", authUser.user_metadata);
       
@@ -73,16 +72,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ) => {
     try {
       setIsLoading(true);
-      const result = await createUserAccount(email, password, role, firstName, lastName);
+      const { user, session } = await createUserAccount(email, password, role, firstName, lastName);
       
       // Check if email confirmation is required by examining if there's no user session
-      const requiresEmailConfirmation = !result.session;
+      const requiresEmailConfirmation = !session;
       
       setIsLoading(false);
       
       // Return information about whether email confirmation is required
       return {
-        user: result.user,
+        user,
         requiresEmailConfirmation
       };
     } catch (error) {
