@@ -8,35 +8,41 @@ import { useToast } from "@/components/ui/use-toast";
 
 const Register = () => {
   const [emailSent, setEmailSent] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleRegisterSuccess = (email: string, password: string) => {
-    // Show a toast with registration success message
-    toast({
-      title: "Registration Successful",
-      description: `Account created for ${email}. You'll be redirected to login.`,
-      duration: 5000,
-    });
-    
-    // Log for debugging
-    console.log("Registration successful, redirecting to login with credentials");
-    
-    // Redirect to login with credentials for auto-login
-    navigate("/login", { 
-      state: { 
-        autoLogin: { 
-          email, 
-          password 
-        } 
-      } 
-    });
+  const handleRegisterSuccess = (email: string, requiresEmailConfirmation: boolean) => {
+    if (requiresEmailConfirmation) {
+      // If email confirmation is required, show the email confirmation screen
+      setUserEmail(email);
+      setEmailSent(true);
+      
+      toast({
+        title: "Registration Successful",
+        description: "Please check your email for a verification link.",
+        duration: 5000,
+      });
+    } else {
+      // If no email confirmation is required, redirect to login
+      toast({
+        title: "Registration Successful",
+        description: `Account created for ${email}. You'll be redirected to login.`,
+        duration: 5000,
+      });
+      
+      // Log for debugging
+      console.log("Registration successful, redirecting to login");
+      
+      // Redirect to login
+      navigate("/login");
+    }
   };
 
   if (emailSent) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-pink-50 to-pink-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <EmailConfirmation />
+        <EmailConfirmation email={userEmail} />
       </div>
     );
   }

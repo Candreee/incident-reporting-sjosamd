@@ -31,33 +31,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Step 1: Authenticate with Supabase
       console.log("Starting authentication for:", email);
-      const { data, error } = await signInWithEmailPassword(email, password);
+      const result = await signInWithEmailPassword(email, password);
       
-      if (error || !data.user) {
-        console.error("Authentication failed:", error);
-        throw error || new Error("Authentication failed");
+      if (!result.user) {
+        console.error("Authentication failed: No user returned");
+        throw new Error("Authentication failed");
       }
       
-      const authUser = data.user;
+      const authUser = result.user;
       console.log("Authentication successful for user:", authUser.id);
       console.log("User metadata:", authUser.user_metadata);
       
       // Set user immediately after successful auth
       setUser(authUser);
       
-      // Step 2: Fetch user profile (don't wait for it to complete)
-      refreshProfile(authUser.id).then(success => {
-        if (!success) {
-          console.warn("Could not fetch user profile, but authentication was successful");
-        }
-      });
+      // Step 2: Fetch user profile
+      const profileSuccess = await refreshProfile(authUser.id);
+      if (!profileSuccess) {
+        console.warn("Could not fetch user profile, but authentication was successful");
+      }
+      
+      // Set a timeout to ensure redirection happens regardless of profile fetching
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
       
       return authUser;
     } catch (error) {
       console.error("Login error:", error);
-      throw error;
-    } finally {
       setIsLoading(false);
+      throw error;
     }
   };
 
@@ -69,10 +72,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     lastName?: string
   ) => {
     try {
-      await createUserAccount(email, password, role, firstName, lastName);
-      return;
+      setIsLoading(true);
+      const result = await createUserAccount(email, password, role, firstName, lastName);
+      
+      // Check if email confirmation is required by examining if there's no user session
+      const requiresEmailConfirmation = !result.session;
+      
+      setIsLoading(false);
+      
+      // Return information about whether email confirmation is required
+      return {
+        user: result.user,
+        requiresEmailConfirmation
+      };
     } catch (error) {
       console.error('Registration error:', error);
+      setIsLoading(false);
       throw error;
     }
   };

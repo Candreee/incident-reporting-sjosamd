@@ -91,6 +91,7 @@ export async function createUserAccount(
 
   console.log("Auth user created successfully:", data.user.id);
   console.log("User metadata:", data.user.user_metadata);
+  console.log("Session data:", data.session ? "Session exists" : "No session (email confirmation required)");
 
   // Then create the profile in the user_profiles table
   console.log("Creating user profile with data:", {
@@ -114,29 +115,14 @@ export async function createUserAccount(
   if (profileError) {
     console.error('Profile creation error:', profileError);
     
-    // If profile creation fails, clean up by deleting the auth user
-    // Admin only operation - would require a Supabase Edge Function in production
-    console.error('Would need to delete auth user due to profile creation failure');
-    
-    throw new Error(`Failed to create user profile: ${profileError.message}`);
-  }
-
-  console.log("User profile created successfully");
-  
-  // Verify the profile was created by attempting to retrieve it
-  const { data: verifyData, error: verifyError } = await supabase
-    .from('user_profiles')
-    .select('*')
-    .eq('id', data.user.id)
-    .single();
-    
-  if (verifyError) {
-    console.error('Error verifying profile creation:', verifyError);
+    // If profile creation fails, log the error but continue
+    // since the user is created in auth system
+    console.error('Profile creation failed but user was created in auth system');
   } else {
-    console.log('Profile verification successful:', verifyData);
+    console.log("User profile created successfully");
   }
   
-  return data.user;
+  return data;
 }
 
 /**

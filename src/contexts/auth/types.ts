@@ -20,7 +20,7 @@ export type AuthContextType = {
     role: 'admin' | 'teacher' | 'principal',
     firstName?: string,
     lastName?: string
-  ) => Promise<void>;
+  ) => Promise<{ user: User | null, requiresEmailConfirmation: boolean }>;
   signOut: () => Promise<void>;
   refreshProfile: (userId: string) => Promise<boolean>;
 };

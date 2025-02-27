@@ -18,7 +18,7 @@ import { PasswordFields } from "./register/PasswordFields";
 export function RegisterForm({
   onRegisterSuccess,
 }: {
-  onRegisterSuccess: (email: string, password: string) => void;
+  onRegisterSuccess: (email: string, requiresEmailConfirmation: boolean) => void;
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -41,7 +41,7 @@ export function RegisterForm({
     try {
       console.log("Starting registration process for:", data.email);
       
-      await signUp(
+      const result = await signUp(
         data.email,
         data.password,
         data.role,
@@ -50,14 +50,10 @@ export function RegisterForm({
       );
       
       console.log("Registration successful for:", data.email);
+      console.log("Email confirmation required:", result.requiresEmailConfirmation);
       
-      toast({
-        title: "Account created",
-        description: `Your account has been created with email: ${data.email} and role: ${data.role}`,
-      });
-      
-      // Pass the credentials to the success handler for auto-login
-      onRegisterSuccess(data.email, data.password);
+      // Call the success handler with the email and confirmation status
+      onRegisterSuccess(data.email, result.requiresEmailConfirmation);
     } catch (error) {
       console.error("Registration error:", error);
       toast({
@@ -65,7 +61,6 @@ export function RegisterForm({
         description: error instanceof Error ? error.message : "Failed to create account",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
