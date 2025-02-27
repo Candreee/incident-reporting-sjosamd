@@ -46,7 +46,7 @@ const ProtectedRoute = ({
     console.log(`ProtectedRoute: User doesn't have required role (${requiredRole}), current role: ${profile?.role}`);
     
     // Redirect to appropriate dashboard based on role
-    if (profile?.role === 'admin') {
+    if (profile?.role === 'admin' || profile?.role === 'principal') {
       return <Navigate to="/admin" replace />;
     } else {
       return <Navigate to="/dashboard" replace />;
@@ -58,12 +58,28 @@ const ProtectedRoute = ({
 
 // Router component that must be inside AuthProvider
 const AppRoutes = () => {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
 
   // Function to redirect to the right dashboard based on role
   const DashboardRedirect = () => {
     console.log("DashboardRedirect: Redirecting based on role:", profile?.role);
-    if (profile?.role === 'admin') {
+    
+    // If user is not authenticated, redirect to login
+    if (!user) {
+      return <Navigate to="/login" replace />;
+    }
+    
+    // If user is authenticated but we don't have profile yet, check metadata
+    if (!profile) {
+      const role = user.user_metadata?.role;
+      if (role === 'admin' || role === 'principal') {
+        return <Navigate to="/admin" replace />;
+      }
+      return <Navigate to="/dashboard" replace />;
+    }
+    
+    // If we have profile, use that
+    if (profile.role === 'admin' || profile.role === 'principal') {
       return <Navigate to="/admin" replace />;
     }
     return <Navigate to="/dashboard" replace />;

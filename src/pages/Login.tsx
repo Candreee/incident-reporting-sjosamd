@@ -31,7 +31,7 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { signIn, user, profile } = useAuth();
+  const { signIn, user, profile, isLoading: authLoading } = useAuth();
 
   // Get auto-login credentials from location state (if coming from registration)
   const autoLoginCredentials = location.state?.autoLogin;
@@ -47,17 +47,12 @@ const Login = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user && profile) {
-      console.log("Login: User and profile detected, redirecting based on role:", profile.role);
-      // Redirect based on role
-      if (profile.role === 'admin' || profile.role === 'principal') {
-        navigate('/admin', { replace: true });
-      } else {
-        navigate('/dashboard', { replace: true });
-      }
+      console.log("Login: User and profile detected, redirect will be handled by AuthProvider");
+      // Redirect is now handled in the AuthProvider
     } else if (user && !profile) {
       console.log("Login: User logged in but no profile found yet");
     }
-  }, [user, profile, navigate]);
+  }, [user, profile]);
 
   // Attempt auto-login if credentials are provided
   useEffect(() => {
@@ -71,7 +66,7 @@ const Login = () => {
             title: "Welcome!",
             description: "You've been automatically logged in.",
           });
-          // Navigation will be handled by the user/profile useEffect
+          // Navigation will be handled by AuthProvider
         } catch (error) {
           console.error("Auto-login error:", error);
           toast({
@@ -92,21 +87,15 @@ const Login = () => {
     console.log("Submitting login form with:", data.email);
     setIsLoading(true);
     try {
-      const result = await signIn(data.email, data.password);
-      console.log("Sign-in successful, user:", result.user?.id);
-      console.log("User role verified from database:", result.role);
+      await signIn(data.email, data.password);
+      console.log("Sign-in successful, redirection handled by AuthProvider");
       
       toast({
         title: "Success",
         description: "You have been signed in successfully",
       });
-
-      // Use the verified role from the database to determine redirect
-      if (result.role === 'admin' || result.role === 'principal') {
-        navigate('/admin', { replace: true });
-      } else {
-        navigate('/dashboard', { replace: true });
-      }
+      
+      // Redirection is now handled in AuthProvider
     } catch (error) {
       console.error("Login error:", error);
       toast({

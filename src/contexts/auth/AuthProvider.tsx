@@ -68,11 +68,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn("Could not fetch user profile, but authentication was successful");
       }
       
-      // Set a timeout to ensure redirection happens regardless of profile fetching
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 500);
+      // Redirect the user based on role
+      if (role === 'admin' || role === 'principal') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
       
+      setIsLoading(false);
       return { user: authUser, role };
     } catch (error) {
       console.error("Login error:", error);

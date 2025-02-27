@@ -31,7 +31,7 @@ const Dashboard = () => {
       // If no user is authenticated, redirect to login
       if (!user) {
         console.log("Dashboard: No user found, redirecting to login");
-        navigate("/login");
+        navigate("/login", { replace: true });
         return;
       }
 
@@ -42,7 +42,7 @@ const Dashboard = () => {
         
         if (role === 'admin' || role === 'principal') {
           console.log("Dashboard: User is admin (from metadata), redirecting to admin dashboard");
-          navigate("/admin");
+          navigate("/admin", { replace: true });
           return;
         }
         
@@ -57,7 +57,7 @@ const Dashboard = () => {
         // Check if user is admin, redirect if needed
         if (profile.role === 'admin' || profile.role === 'principal') {
           console.log("Dashboard: User is admin, redirecting to admin dashboard");
-          navigate("/admin");
+          navigate("/admin", { replace: true });
           return;
         }
         

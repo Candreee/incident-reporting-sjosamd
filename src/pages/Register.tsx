@@ -36,8 +36,17 @@ const Register = () => {
       // Log for debugging
       console.log("Email confirmation not required, redirecting to login");
       
-      // Redirect to login
-      navigate("/login");
+      // Redirect to login with auto-login information
+      navigate("/login", { 
+        state: { 
+          autoLogin: { 
+            email,
+            // We can't auto-login because we don't have the password anymore
+            // The user will need to log in manually
+          } 
+        },
+        replace: true
+      });
     }
   };
 
