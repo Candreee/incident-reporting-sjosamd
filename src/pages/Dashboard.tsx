@@ -6,7 +6,7 @@ import { ReportStatusFilter } from "@/components/incident-report/ReportStatusFil
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { DashboardReportsTable } from "@/components/dashboard/DashboardReportsTable";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
 import type { Database } from "@/integrations/supabase/types";
 

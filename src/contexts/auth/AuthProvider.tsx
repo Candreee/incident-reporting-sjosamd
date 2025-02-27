@@ -1,34 +1,10 @@
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
-
-type UserProfile = {
-  id: string;
-  email: string;
-  role: 'admin' | 'teacher' | 'principal';
-  first_name?: string | null;
-  last_name?: string | null;
-};
-
-type AuthContextType = {
-  user: User | null;
-  profile: UserProfile | null;
-  isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (
-    email: string, 
-    password: string, 
-    role: 'admin' | 'teacher' | 'principal',
-    firstName?: string,
-    lastName?: string
-  ) => Promise<void>;
-  signOut: () => Promise<void>;
-  refreshProfile: (userId: string) => Promise<void>;
-};
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext } from "./AuthContext";
+import { UserProfile } from "./types";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -243,12 +219,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }
