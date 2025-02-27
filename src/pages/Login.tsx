@@ -92,7 +92,7 @@ const Login = () => {
     console.log("Submitting login form with:", data.email);
     setIsLoading(true);
     try {
-      const user = await signIn(data.email, data.password);
+      const authUser = await signIn(data.email, data.password);
       console.log("Sign-in successful");
       
       // Set a short timeout to allow profile to be fetched before redirecting
@@ -101,7 +101,9 @@ const Login = () => {
         if (!profile) {
           console.log("Profile not available after timeout, redirecting anyway");
           
-          if (user.user_metadata?.role === 'admin') {
+          // Use the authUser object to determine role
+          const role = authUser.user_metadata?.role;
+          if (role === 'admin') {
             navigate('/admin', { replace: true });
           } else {
             navigate('/dashboard', { replace: true });

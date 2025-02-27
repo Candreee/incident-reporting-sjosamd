@@ -13,7 +13,7 @@ export type AuthContextType = {
   user: User | null;
   profile: UserProfile | null;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<User>;
   signUp: (
     email: string, 
     password: string, 
@@ -22,5 +22,5 @@ export type AuthContextType = {
     lastName?: string
   ) => Promise<void>;
   signOut: () => Promise<void>;
-  refreshProfile: (userId: string) => Promise<void>;
+  refreshProfile: (userId: string) => Promise<boolean>;
 };
