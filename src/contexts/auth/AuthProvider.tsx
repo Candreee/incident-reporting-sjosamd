@@ -68,10 +68,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn("Could not fetch user profile, but authentication was successful");
       }
       
-      // Redirect the user based on role
+      // Redirect the user based on role - fixed to check for 'admin' or 'principal' consistently
       if (role === 'admin' || role === 'principal') {
+        console.log(`Redirecting user with role "${role}" to admin dashboard`);
         navigate('/admin', { replace: true });
       } else {
+        console.log(`Redirecting user with role "${role}" to regular dashboard`);
         navigate('/dashboard', { replace: true });
       }
       

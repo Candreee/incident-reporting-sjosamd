@@ -41,12 +41,16 @@ const ProtectedRoute = ({
     return <>{children}</>;
   }
 
+  // For role checking, first use the profile role if available
+  const userRole = profile?.role || user.user_metadata?.role;
+  console.log(`ProtectedRoute: Checking if user has required role "${requiredRole}", current role: "${userRole}"`);
+  
   // If role is required, check against user profile
-  if (profile?.role !== requiredRole) {
-    console.log(`ProtectedRoute: User doesn't have required role (${requiredRole}), current role: ${profile?.role}`);
+  if (userRole !== requiredRole) {
+    console.log(`ProtectedRoute: User doesn't have required role (${requiredRole}), current role: ${userRole}`);
     
     // Redirect to appropriate dashboard based on role
-    if (profile?.role === 'admin' || profile?.role === 'principal') {
+    if (userRole === 'admin' || userRole === 'principal') {
       return <Navigate to="/admin" replace />;
     } else {
       return <Navigate to="/dashboard" replace />;
@@ -62,26 +66,22 @@ const AppRoutes = () => {
 
   // Function to redirect to the right dashboard based on role
   const DashboardRedirect = () => {
-    console.log("DashboardRedirect: Redirecting based on role:", profile?.role);
+    // Get role from profile first, then fall back to user metadata
+    const userRole = profile?.role || user?.user_metadata?.role;
+    console.log("DashboardRedirect: Redirecting based on role:", userRole);
     
     // If user is not authenticated, redirect to login
     if (!user) {
       return <Navigate to="/login" replace />;
     }
     
-    // If user is authenticated but we don't have profile yet, check metadata
-    if (!profile) {
-      const role = user.user_metadata?.role;
-      if (role === 'admin' || role === 'principal') {
-        return <Navigate to="/admin" replace />;
-      }
-      return <Navigate to="/dashboard" replace />;
-    }
-    
-    // If we have profile, use that
-    if (profile.role === 'admin' || profile.role === 'principal') {
+    // Redirect based on role
+    if (userRole === 'admin' || userRole === 'principal') {
+      console.log("DashboardRedirect: Redirecting to admin dashboard");
       return <Navigate to="/admin" replace />;
     }
+    
+    console.log("DashboardRedirect: Redirecting to regular dashboard");
     return <Navigate to="/dashboard" replace />;
   };
 
