@@ -115,19 +115,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      console.log("Signing in with email:", email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Sign-in error:", error);
+        throw error;
+      }
+
+      console.log("Sign-in successful for user:", data.user?.id);
 
       // Fetch profile after successful login
       if (data.user) {
         await fetchProfile(data.user.id);
       }
       
-      // Navigation will be handled by auth state change listener
+      // Navigation will be handled by auth state change listener in useEffect
     } catch (error) {
       console.error("Login error:", error);
       throw error;

@@ -32,6 +32,7 @@ const ProtectedRoute = ({
   }
 
   if (!user) {
+    console.log("ProtectedRoute: User not authenticated, redirecting to login");
     return <Navigate to="/login" replace />;
   }
 
@@ -42,6 +43,8 @@ const ProtectedRoute = ({
 
   // If role is required, check against user profile
   if (profile?.role !== requiredRole) {
+    console.log(`ProtectedRoute: User doesn't have required role (${requiredRole}), current role: ${profile?.role}`);
+    
     // Redirect to appropriate dashboard based on role
     if (profile?.role === 'admin') {
       return <Navigate to="/admin" replace />;
@@ -59,6 +62,7 @@ const AppRoutes = () => {
 
   // Function to redirect to the right dashboard based on role
   const DashboardRedirect = () => {
+    console.log("DashboardRedirect: Redirecting based on role:", profile?.role);
     if (profile?.role === 'admin') {
       return <Navigate to="/admin" replace />;
     }

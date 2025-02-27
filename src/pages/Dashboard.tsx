@@ -6,6 +6,8 @@ import { ReportStatusFilter } from "@/components/incident-report/ReportStatusFil
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { DashboardReportsTable } from "@/components/dashboard/DashboardReportsTable";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import type { Database } from "@/integrations/supabase/types";
 
 type IncidentReport = Database["public"]["Tables"]["incident_reports"]["Row"];
@@ -17,10 +19,26 @@ const Dashboard = () => {
   const [typeFilter, setTypeFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
+    // Check if user is authenticated
+    if (!user) {
+      console.log("Dashboard: User not authenticated, redirecting to login");
+      navigate("/login");
+      return;
+    }
+
+    // Check if user is admin, redirect if needed
+    if (profile?.role === 'admin') {
+      console.log("Dashboard: User is admin, redirecting to admin dashboard");
+      navigate("/admin");
+      return;
+    }
+
     fetchReports();
-  }, [toast]);
+  }, [user, profile, navigate, toast]);
 
   useEffect(() => {
     let filtered = [...reports];
@@ -38,6 +56,7 @@ const Dashboard = () => {
 
   const fetchReports = async () => {
     try {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from("incident_reports")
         .select("*")
@@ -58,6 +77,11 @@ const Dashboard = () => {
       setIsLoading(false);
     }
   };
+
+  // If still checking authentication status, show loading
+  if (!user) {
+    return null; // Will be redirected in useEffect
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

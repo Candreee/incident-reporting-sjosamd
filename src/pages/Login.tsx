@@ -47,11 +47,12 @@ const Login = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user && profile) {
+      console.log("Login: User and profile detected, redirecting based on role:", profile.role);
       // Redirect based on role
       if (profile.role === 'admin') {
-        navigate('/admin');
+        navigate('/admin', { replace: true });
       } else {
-        navigate('/dashboard');
+        navigate('/dashboard', { replace: true });
       }
     }
   }, [user, profile, navigate]);
@@ -60,6 +61,7 @@ const Login = () => {
   useEffect(() => {
     const performAutoLogin = async () => {
       if (autoLoginCredentials && !user) {
+        console.log("Attempting auto-login with credentials:", autoLoginCredentials.email);
         setIsLoading(true);
         try {
           await signIn(autoLoginCredentials.email, autoLoginCredentials.password);
@@ -85,11 +87,16 @@ const Login = () => {
   }, [autoLoginCredentials, signIn, toast, user]);
 
   const onSubmit = async (data: LoginFormData) => {
+    console.log("Submitting login form with:", data.email);
     setIsLoading(true);
     try {
       await signIn(data.email, data.password);
-      
-      // The navigate will happen in the signIn function or the useEffect above
+      console.log("Sign-in successful");
+      toast({
+        title: "Success",
+        description: "You have been signed in successfully",
+      });
+      // The navigate will happen in the useEffect above
     } catch (error) {
       console.error("Login error:", error);
       toast({
