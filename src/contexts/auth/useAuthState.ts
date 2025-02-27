@@ -27,24 +27,29 @@ export function useAuthState() {
           console.log("Active session found for user:", session.user.id);
           setUser(session.user);
           
-          try {
-            const userProfile = await fetchUserProfile(session.user.id);
-            if (userProfile) {
-              setProfile(userProfile);
-            } else {
-              console.warn("No profile found for user:", session.user.id);
-            }
-          } catch (profileError) {
-            console.error("Error fetching user profile:", profileError);
-          }
+          // Fetch profile in parallel with setting the user
+          fetchUserProfile(session.user.id)
+            .then(userProfile => {
+              if (userProfile) {
+                setProfile(userProfile);
+              } else {
+                console.warn("No profile found for user:", session.user.id);
+              }
+            })
+            .catch(profileError => {
+              console.error("Error fetching user profile:", profileError);
+            })
+            .finally(() => {
+              setIsLoading(false);
+            });
         } else {
           console.log("No active session found");
           setUser(null);
           setProfile(null);
+          setIsLoading(false);
         }
       } catch (error) {
         console.error("Error in auth initialization:", error);
-      } finally {
         setIsLoading(false);
       }
     };
@@ -58,16 +63,18 @@ export function useAuthState() {
       if (session?.user) {
         setUser(session.user);
         
-        try {
-          const userProfile = await fetchUserProfile(session.user.id);
-          if (userProfile) {
-            setProfile(userProfile);
-          } else {
-            console.warn("No profile found after auth state change for user:", session.user.id);
-          }
-        } catch (profileError) {
-          console.error("Error fetching user profile after auth state change:", profileError);
-        }
+        // Don't wait for profile to be fetched before continuing
+        fetchUserProfile(session.user.id)
+          .then(userProfile => {
+            if (userProfile) {
+              setProfile(userProfile);
+            } else {
+              console.warn("No profile found after auth state change for user:", session.user.id);
+            }
+          })
+          .catch(profileError => {
+            console.error("Error fetching user profile after auth state change:", profileError);
+          });
       } else {
         setUser(null);
         setProfile(null);

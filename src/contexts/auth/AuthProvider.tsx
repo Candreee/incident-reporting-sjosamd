@@ -47,28 +47,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Authentication successful for user:", authUser.id);
       console.log("User metadata:", authUser.user_metadata);
       
-      // Step 2: Verify user role from database BEFORE completing sign-in
-      console.log("Verifying user role before completing sign-in");
-      const userRole = await verifyUserRole(authUser.id);
+      // Set user immediately after successful auth
+      setUser(authUser);
       
-      if (!userRole) {
-        console.warn("Role verification failed, will use metadata as fallback");
-      }
+      // Step 2: Verify user role and fetch profile in parallel
+      const [userRole, profileSuccess] = await Promise.all([
+        verifyUserRole(authUser.id),
+        refreshProfile(authUser.id)
+      ]);
       
       // Use verified role from database or fallback to metadata
       const role = userRole || authUser.user_metadata?.role;
       console.log("User role determined to be:", role);
       
-      // Set user immediately after successful auth
-      setUser(authUser);
-      
-      // Step 3: Fetch complete user profile
-      const profileSuccess = await refreshProfile(authUser.id);
       if (!profileSuccess) {
         console.warn("Could not fetch user profile, but authentication was successful");
       }
       
-      // Redirect the user based on role - fixed to check for 'admin' or 'principal' consistently
+      // Redirect the user based on role
       if (role === 'admin' || role === 'principal') {
         console.log(`Redirecting user with role "${role}" to admin dashboard`);
         navigate('/admin', { replace: true });
