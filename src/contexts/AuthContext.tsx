@@ -47,6 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session?.user?.id);
       setUser(session?.user ?? null);
       if (session?.user) {
         await fetchProfile(session.user.id);
@@ -62,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function fetchProfile(userId: string) {
+    console.log("Fetching profile for user:", userId);
     const { data, error } = await supabase
       .from('user_profiles')
       .select('*')
@@ -73,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    console.log("Profile fetched:", data);
     setProfile(data);
   }
 
@@ -94,8 +97,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     lastName?: string
   ) => {
     try {
+      console.log("Starting signup process for:", email);
+      
       // Step 1: Create the auth user with Supabase Auth
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -113,16 +118,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw signUpError;
       }
 
-      if (!data.user) {
+      if (!authData.user) {
+        console.error('No user data returned from signup');
         throw new Error('Failed to create user account');
       }
+
+      console.log("Auth user created successfully:", authData.user.id);
 
       // Step 2: Create the user profile in the user_profiles table
       const { error: profileError } = await supabase
         .from('user_profiles')
         .insert([
           {
-            id: data.user.id,
+            id: authData.user.id,
             email,
             role,
             first_name: firstName,
@@ -132,9 +140,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (profileError) {
         console.error('Profile creation error:', profileError);
-        throw new Error('Failed to create user profile. Please try again.');
+        // If profile creation fails, we should clean up the auth user
+        await supabase.auth.admin.deleteUser(authData.user.id);
+        throw new Error(`Failed to create user profile: ${profileError.message}`);
       }
 
+      console.log("User profile created successfully");
+      
       // Success - return without automatic navigation
       return;
     } catch (error) {
@@ -163,3 +175,4 @@ export function useAuth() {
   }
   return context;
 }
+
