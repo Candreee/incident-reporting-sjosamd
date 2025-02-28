@@ -19,11 +19,13 @@ const NewReport = () => {
   const form = useForm<IncidentFormData>({
     resolver: zodResolver(incidentFormSchema),
     defaultValues: {
-      studentId: undefined,
+      studentIds: [],
+      incidentTypes: [],
       incidentDate: new Date().toISOString().split("T")[0],
       incidentTime: new Date().toTimeString().slice(0, 5), // Default to current time (HH:MM format)
       description: "",
-      incidentType: undefined,
+      evidenceUrl: "",
+      evidenceType: "",
     },
   });
 
@@ -38,12 +40,11 @@ const NewReport = () => {
 
       console.log(`User role: ${profile?.role}, setting status to: ${status}`);
 
-      // Fetch student name for the record
+      // Fetch student names for the record
       const { data: studentData, error: studentError } = await supabase
         .from("students")
-        .select("name")
-        .eq("id", data.studentId)
-        .single();
+        .select("id, name")
+        .in("id", data.studentIds);
 
       if (studentError) {
         console.error("Error fetching student data:", studentError);
@@ -60,41 +61,45 @@ const NewReport = () => {
 
       console.log("Inserting report with combined date/time:", combinedDateTime);
 
-      // Insert the report
-      const { data: insertedReport, error } = await supabase
+      // Create a comma-separated string of student names
+      const studentNames = studentData.map(student => student.name).join(", ");
+      
+      // Create an array of reports to insert - one for each incident type
+      const reportsToInsert = data.incidentTypes.map(incidentType => ({
+        student_id: data.studentIds[0], // Primary student (first in the list)
+        student_names: studentNames,
+        class: "", // Keeping empty but not removing since it's in the database schema
+        incident_date: combinedDateTime,
+        description: data.description,
+        incident_type: incidentType,
+        status: status,
+        created_by: (await supabase.auth.getUser()).data.user?.id,
+        reporter_name: reporterName,
+        evidence_url: data.evidenceUrl || null,
+        evidence_type: data.evidenceType || null,
+      }));
+
+      // Insert all reports
+      const { data: insertedReports, error } = await supabase
         .from("incident_reports")
-        .insert([
-          {
-            student_id: data.studentId,
-            student_names: studentData.name,
-            class: "", // Keeping empty but not removing since it's in the database schema
-            incident_date: combinedDateTime,
-            description: data.description,
-            incident_type: data.incidentType,
-            status: status,
-            created_by: (await supabase.auth.getUser()).data.user?.id,
-            reporter_name: reporterName,
-            evidence_url: data.evidenceUrl || null,
-            evidence_type: data.evidenceType || null,
-          },
-        ])
-        .select()
-        .single();
+        .insert(reportsToInsert)
+        .select();
 
       if (error) {
-        console.error("Error inserting report:", error);
-        throw new Error(`Failed to insert report: ${error.message}`);
+        console.error("Error inserting reports:", error);
+        throw new Error(`Failed to insert reports: ${error.message}`);
       }
 
-      console.log("Report inserted successfully:", insertedReport);
+      console.log("Reports inserted successfully:", insertedReports);
 
-      // Send notification to admins and principals
+      // Send notification to admins and principals for each report
       try {
+        // Only send one notification for the whole group of reports
         const { error: notificationError } = await supabase.functions.invoke('notify-incident', {
           body: {
-            reportId: insertedReport.id,
-            studentName: studentData.name,
-            incidentType: data.incidentType,
+            reportId: insertedReports[0].id,
+            studentName: studentNames,
+            incidentType: data.incidentTypes.join(", "),
             description: data.description,
             reporterName: reporterName,
           },
@@ -118,7 +123,7 @@ const NewReport = () => {
       console.error("Error submitting form:", error);
       toast({
         title: "Error",
-        description: `Failed to submit incident report: ${error.message || "Unknown error"}`,
+        description: `Failed to submit incident report: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive",
       });
     }

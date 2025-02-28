@@ -189,7 +189,14 @@ export function AddReportDialog({
         .order("name");
       
       if (error) throw error;
-      setStudents(data || []);
+      
+      // Add incident_count with default value of 0 to comply with Student type
+      const studentsWithIncidentCount = data?.map(student => ({
+        ...student,
+        incident_count: 0
+      })) || [];
+      
+      setStudents(studentsWithIncidentCount);
     } catch (error) {
       console.error("Error fetching students:", error);
       toast({
