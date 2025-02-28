@@ -55,6 +55,8 @@ export function AddReportDialog({
       const status = profile?.role === "admin" || profile?.role === "principal" 
         ? "approved" 
         : "pending";
+        
+      console.log(`User role: ${profile?.role}, setting status to: ${status}`);
 
       // Get today's date and combine with the time
       const today = new Date().toISOString().split('T')[0];

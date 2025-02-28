@@ -36,6 +36,8 @@ const NewReport = () => {
         ? "approved" 
         : "pending";
 
+      console.log(`User role: ${profile?.role}, setting status to: ${status}`);
+
       // Fetch student name for the record
       const { data: studentData, error: studentError } = await supabase
         .from("students")

@@ -65,10 +65,10 @@ export function ReportsTable({ reports, onUpdateStatus, onDeleteReport, currentU
                   size="sm"
                   variant="outline"
                   className="flex-1 hover:bg-green-50"
-                  onClick={() => onUpdateStatus(report.id, "reviewed")}
+                  onClick={() => onUpdateStatus(report.id, "approved")}
                 >
                   <Check className="h-4 w-4 text-green-600 mr-2" />
-                  Mark as Reviewed
+                  Approve
                 </Button>
               )}
               {canDelete(report) && (
@@ -129,7 +129,7 @@ export function ReportsTable({ reports, onUpdateStatus, onDeleteReport, currentU
                       size="sm"
                       variant="outline"
                       className="hover:bg-green-50"
-                      onClick={() => onUpdateStatus(report.id, "reviewed")}
+                      onClick={() => onUpdateStatus(report.id, "approved")}
                     >
                       <Check className="h-4 w-4 text-green-600" />
                     </Button>
