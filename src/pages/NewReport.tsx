@@ -64,6 +64,10 @@ const NewReport = () => {
       // Create a comma-separated string of student names
       const studentNames = studentData.map(student => student.name).join(", ");
       
+      // Get the current user ID before creating the reports array
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      
       // Create an array of reports to insert - one for each incident type
       const reportsToInsert = data.incidentTypes.map(incidentType => ({
         student_id: data.studentIds[0], // Primary student (first in the list)
@@ -73,7 +77,7 @@ const NewReport = () => {
         description: data.description,
         incident_type: incidentType,
         status: status,
-        created_by: (await supabase.auth.getUser()).data.user?.id,
+        created_by: userId,
         reporter_name: reporterName,
         evidence_url: data.evidenceUrl || null,
         evidence_type: data.evidenceType || null,
